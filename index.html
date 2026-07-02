@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL 练习场 · v0.3</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f6f8fa;
+    color: #24292f;
+    font-size: 14px;
+  }
+  a { color: #0969da; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ============ Header ============ */
+  header {
+    background: linear-gradient(90deg, #0969da 0%, #218bff 100%);
+    color: white;
+    padding: 10px 24px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: 48px;
+  }
+  header h1 { margin: 0; font-size: 17px; font-weight: 600; }
+  header .status { font-size: 13px; opacity: 0.95; }
+  #status-badge.loading { color: #fff9c4; }
+  #status-badge.ready { color: #b8f5c8; }
+  #status-badge.error { color: #ffcdd2; }
+
+  /* ============ Layout ============ */
+  .layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: calc(100vh - 48px);
+  }
+
+  /* ============ Sidebar ============ */
+  aside {
+    background: #ffffff;
+    border-right: 1px solid #d0d7de;
+    padding: 12px 0;
+    position: sticky;
+    top: 48px;
+    height: calc(100vh - 48px);
+    overflow-y: auto;
+  }
+  .progress-bar {
+    padding: 8px 16px 12px;
+    font-size: 11px;
+    color: #57606a;
+    border-bottom: 1px solid #eaecef;
+    margin-bottom: 8px;
+  }
+  .progress-fill {
+    height: 4px;
+    background: #eaecef;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .progress-fill > div {
+    height: 100%;
+    background: linear-gradient(90deg, #2da44e, #4ac26b);
+    transition: width 0.3s;
+  }
+  .lesson-group {
+    padding: 8px 16px 4px;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #57606a;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+  }
+  .lesson-group:hover { color: #0969da; }
+  .lesson-group.active { color: #0969da; }
+  .lesson-item {
+    padding: 5px 20px 5px 32px;
+    font-size: 13px;
+    color: #24292f;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.4;
+  }
+  .lesson-item:hover { background: #f6f8fa; }
+  .lesson-item .lesson-num { color: #8b949e; font-size: 11px; font-family: monospace; min-width: 26px; }
+  .lesson-item .title-text { flex: 1; }
+  .lesson-item .status-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: #d0d7de; flex-shrink: 0;
+  }
+  .lesson-item.passed .status-dot { background: #2da44e; }
+  .lesson-item.attempted .status-dot { background: #fb8500; }
+  .tool-item {
+    padding: 8px 20px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #57606a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tool-item:hover { background: #f6f8fa; color: #24292f; }
+
+  /* ============ Main content ============ */
+  main {
+    padding: 24px 40px 80px;
+    max-width: 920px;
+    width: 100%;
+  }
+  .group-header {
+    margin-bottom: 24px;
+  }
+  .group-header h1 {
+    font-size: 26px;
+    margin: 0 0 8px;
+    font-weight: 700;
+    color: #24292f;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #0969da;
+    display: inline-block;
+  }
+  .group-header .subtitle {
+    color: #57606a;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ============ Top data preview ============ */
+  .db-preview {
+    background: white;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .db-preview-header {
+    background: #EEF3E2;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: #24292f;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #d0d7de;
+  }
+  .db-preview-header .tabs { display: flex; gap: 4px; }
+  .db-preview-header .tab {
+    padding: 3px 10px;
+    background: white;
+    border: 1px solid #d0d7de;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #24292f;
+    font-family: monospace;
+  }
+  .db-preview-header .tab.active { background: #0969da; color: white; border-color: #0860c8; }
+  .db-preview-body { padding: 0; overflow-x: auto; max-height: 240px; overflow-y: auto; }
+  .db-preview-body table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: "SF Mono", "Consolas", "Menlo", monospace;
+  }
+  .db-preview-body th, .db-preview-body td {
+    padding: 5px 10px;
+    border-bottom: 1px solid #eaecef;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .db-preview-body th {
+    background: #f6f8fa;
+    font-weight: 600;
+    color: #24292f;
+    position: sticky;
+    top: 0;
+  }
+  .db-preview-body td.r { text-align: right; }
+
+  /* ============ Problem card ============ */
+  .qu {
+    background: white;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    scroll-margin-top: 60px;
+  }
+  .qu h2 {
+    margin: 0 0 14px;
+    font-size: 19px;
+    font-weight: 600;
+    color: #24292f;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eaecef;
+  }
+  .qu h2 .qid {
+    font-family: monospace;
+    color: #0969da;
+    font-size: 15px;
+    background: #ddf4ff;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+  }
+  .badge.easy { background: #2da44e; }
+  .badge.medium { background: #fb8500; }
+  .badge.hard { background: #cf222e; }
+
+  .qu .intro {
+    color: #24292f;
+    line-height: 1.7;
+    margin-bottom: 12px;
+    font-size: 14px;
+  }
+  .qu .intro b { color: #0550ae; font-weight: 700; }
+  .qu .imper {
+    background: #ddf4ff;
+    padding: 10px 14px;
+    border-left: 3px solid #0969da;
+    border-radius: 4px;
+    margin-bottom: 14px;
+    color: #0550ae;
+    line-height: 1.6;
+    font-weight: 500;
+  }
+  .qu .imper b { color: #082567; }
+  .qu .note {
+    background: #fff8c5;
+    padding: 6px 10px;
+    border-left: 3px solid #d4a72c;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #7d4e00;
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  .qu code {
+    background: #eff1f3;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: "SF Mono", "Consolas", monospace;
+    font-size: 12px;
+    color: #cf222e;
+  }
+
+  .editor-wrap {
+    position: relative;
+    margin-bottom: 10px;
+  }
+  .editor-wrap textarea {
+    width: 100%;
+    min-height: 100px;
+    font-family: "SF Mono", "Consolas", "Menlo", monospace;
+    font-size: 13px;
+    padding: 10px 12px;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    resize: vertical;
+    background: #ffffff;
+    line-height: 1.5;
+    color: #24292f;
+  }
+  .editor-wrap textarea:focus { outline: none; border-color: #0969da; box-shadow: 0 0 0 3px rgba(9,105,218,0.15); }
+  .editor-wrap .reset-starter {
+    position: absolute;
+    right: 8px;
+    top: 6px;
+    background: rgba(246,248,250,0.9);
+    border: 1px solid #d0d7de;
+    padding: 2px 8px;
+    font-size: 11px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #57606a;
+  }
+  .editor-wrap .reset-starter:hover { color: #24292f; background: white; }
+
+  .qu-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  button {
+    padding: 5px 12px;
+    border: 1px solid #d0d7de;
+    background: #f6f8fa;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #24292f;
+    transition: all 0.15s;
+  }
+  button:hover:not(:disabled) { background: #eaecef; border-color: #afb8c1; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary { background: #2da44e; color: white; border-color: #2c974b; }
+  button.primary:hover:not(:disabled) { background: #2c974b; }
+  button.blue { background: #0969da; color: white; border-color: #0860c8; }
+  button.blue:hover:not(:disabled) { background: #0860c8; }
+  button.ghost { background: transparent; font-size: 12px; padding: 4px 10px; color: #57606a; }
+
+  .result-box {
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    overflow: hidden;
+    display: none;
+    margin-bottom: 8px;
+  }
+  .result-box.show { display: block; }
+  .result-box .result-header {
+    padding: 6px 12px;
+    background: #f6f8fa;
+    font-size: 12px;
+    color: #57606a;
+    border-bottom: 1px solid #d0d7de;
+    display: flex;
+    justify-content: space-between;
+  }
+  .result-box .result-body {
+    max-height: 300px;
+    overflow: auto;
+  }
+  table.result {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: "SF Mono", "Consolas", "Menlo", monospace;
+  }
+  table.result th, table.result td {
+    padding: 4px 10px;
+    border-bottom: 1px solid #eaecef;
+    text-align: left;
+    white-space: nowrap;
+  }
+  table.result th { background: #f6f8fa; font-weight: 600; position: sticky; top: 0; }
+  table.result td.null { color: #8b949e; font-style: italic; }
+  .err-msg {
+    padding: 10px 14px;
+    color: #cf222e;
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    background: #ffebe9;
+  }
+
+  .feedback {
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.5;
+    display: none;
+    margin-bottom: 8px;
+  }
+  .feedback.show { display: block; }
+  .feedback.pass { background: #dafbe1; color: #116329; border: 1px solid #4ac26b; }
+  .feedback.fail { background: #ffebe9; color: #82071e; border: 1px solid #ffa198; }
+  .feedback.info { background: #ddf4ff; color: #0550ae; border: 1px solid #54aeff; }
+
+  details.ans-block {
+    margin-top: 8px;
+    background: #f6f8fa;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  details.ans-block summary { cursor: pointer; color: #0969da; font-weight: 600; }
+  details.ans-block pre {
+    background: white;
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 1px solid #eaecef;
+    margin: 8px 0 0;
+    font-family: "SF Mono", "Consolas", "Menlo", monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    color: #24292f;
+  }
+  details.hint-block {
+    margin-top: 8px;
+    background: #fff8f0;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    border: 1px solid #ffdfb5;
+  }
+  details.hint-block summary { cursor: pointer; color: #953800; font-weight: 600; }
+  details.hint-block > div { padding-top: 8px; line-height: 1.7; }
+
+  kbd {
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-family: monospace;
+    font-size: 11px;
+    box-shadow: inset 0 -1px 0 #d0d7de;
+    color: #24292f;
+  }
+
+  /* SQL syntax highlight-ish */
+  .sql-keyword { color: #cf222e; font-weight: bold; }
+  .sql-string { color: #0a3069; }
+  .sql-number { color: #953800; }
+</style>
+</head>
+<body>
+<header>
+  <h1>❄️ SQL 练习场 <span style="opacity:0.7;font-size:12px;font-weight:400;">v0.3 · 上海电力大学·数据库原理及应用</span></h1>
+  <div class="status">状态：<span id="status-badge" class="loading">正在加载 SQLite 引擎…</span></div>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="progress-bar">
+      <span id="progress-text">进度 0 / 25</span>
+      <div class="progress-fill"><div id="progress-bar-inner" style="width:0%"></div></div>
+    </div>
+    <div id="nav-list"></div>
+    <div class="lesson-group" style="margin-top:12px; cursor:default">🛠️ 工具</div>
+    <div class="tool-item" onclick="resetDB()" title="把数据库还原为初始的 20 学生 / 8 课程 / 35 选课（当误改数据时用）">↺ 重置数据库</div>
+    <div class="tool-item" onclick="resetProgress()" title="清除已通过/尝试过的题目记录（数据库不受影响）">🧹 清除进度</div>
+  </aside>
+
+  <main id="main-content">
+    <!-- 内容动态渲染 -->
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
+<script>
+// ============ 数据库初始化 SQL ============
+const INIT_SQL = `
+DROP TABLE IF EXISTS sc;
+DROP TABLE IF EXISTS student;
+DROP TABLE IF EXISTS course;
+
+CREATE TABLE student (
+  student_id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  gender TEXT CHECK(gender IN ('男','女')),
+  department TEXT,
+  birth_year INTEGER
+);
+
+CREATE TABLE course (
+  course_id TEXT PRIMARY KEY,
+  course_name TEXT NOT NULL,
+  credit INTEGER,
+  teacher TEXT
+);
+
+CREATE TABLE sc (
+  student_id TEXT,
+  course_id TEXT,
+  score INTEGER,
+  PRIMARY KEY(student_id, course_id),
+  FOREIGN KEY(student_id) REFERENCES student(student_id),
+  FOREIGN KEY(course_id) REFERENCES course(course_id)
+);
+
+INSERT INTO student VALUES
+('20240101','张伟','男','计算机科学',2006),
+('20240102','李娜','女','计算机科学',2006),
+('20240103','王强','男','计算机科学',2005),
+('20240104','张敏','女','计算机科学',2006),
+('20240105','刘洋','男','计算机科学',2007),
+('20240201','赵磊','男','软件工程',2006),
+('20240202','陈静','女','软件工程',2006),
+('20240203','孙涛','男','软件工程',2006),
+('20240204','周芳','女','软件工程',2007),
+('20240205','王浩','男','软件工程',2005),
+('20240301','吴斌','男','电气工程',2005),
+('20240302','郑丽','女','电气工程',2006),
+('20240303','马超','男','电气工程',2006),
+('20240304','张丹','女','电气工程',2006),
+('20240305','李凡','男','电气工程',2007),
+('20240401','冯梅','女','数学',2006),
+('20240402','蒋华','男','数学',2007),
+('20240403','沈玲','女','数学',2006),
+('20240404','张涛','男','数学',2006),
+('20240405','杨柳','女','数学',2005);
+
+INSERT INTO course VALUES
+('C001','数据库原理及应用',4,'李教授'),
+('C002','数据结构',4,'王教授'),
+('C003','高等数学',5,'张教授'),
+('C004','操作系统',3,'刘教授'),
+('C005','计算机网络',3,'陈教授'),
+('C006','软件工程',3,'赵教授'),
+('C007','编译原理',3,'钱教授'),
+('C008','人工智能导论',2,'孙教授');
+
+INSERT INTO sc VALUES
+('20240101','C001',85),('20240101','C002',78),('20240101','C003',92),
+('20240102','C001',91),('20240102','C002',88),('20240102','C003',85),('20240102','C008',90),
+('20240103','C001',72),('20240103','C002',65),('20240103','C004',80),
+('20240104','C001',95),('20240104','C002',90),('20240104','C003',88),
+('20240105','C001',60),('20240105','C002',55),
+('20240201','C001',82),('20240201','C006',88),('20240201','C008',75),
+('20240202','C001',77),('20240202','C006',92),
+('20240203','C001',68),('20240203','C006',70),
+('20240204','C006',85),('20240204','C008',82),
+('20240301','C001',75),('20240301','C005',82),
+('20240302','C005',90),('20240302','C008',88),
+('20240303','C001',88),('20240303','C005',NULL),
+('20240304','C005',72),
+('20240401','C003',98),('20240402','C003',94),('20240403','C003',89),
+('20240404','C003',76);
+`;
+
+// ============ 分组配置 ============
+const GROUPS = [
+  {
+    key: 'select', icon: '📖', title: 'SELECT 基础',
+    subtitle: '从最简单的查询开始：SELECT * / 指定列 / DISTINCT 去重 / AS 别名 / LIMIT 限行。掌握"从一张表里取数据"的所有基本姿势。',
+    tables: ['student'],
+  },
+  {
+    key: 'where', icon: '🔍', title: 'WHERE 条件过滤',
+    subtitle: '给查询加过滤条件：等值、AND/OR、BETWEEN 范围、IN 集合、LIKE 模糊、IS NULL 空值判断。',
+    tables: ['student', 'sc'],
+  },
+  {
+    key: 'order', icon: '📊', title: 'ORDER BY 排序',
+    subtitle: '按一列或多列排序，升降序组合。',
+    tables: ['student'],
+  },
+  {
+    key: 'agg', icon: '📈', title: '聚合与分组',
+    subtitle: 'COUNT / SUM / AVG / MAX / MIN 聚合函数；GROUP BY 分组；HAVING 分组后过滤。教材 ch08 核心。',
+    tables: ['student', 'sc'],
+  },
+  {
+    key: 'join', icon: '🔗', title: 'JOIN 多表连接',
+    subtitle: '内连接 JOIN、外连接 LEFT/RIGHT JOIN。用于跨表查询关联信息。',
+    tables: ['student', 'course', 'sc'],
+  },
+  {
+    key: 'sub', icon: '🎯', title: '子查询',
+    subtitle: 'IN 子查询、NOT IN、相关子查询——嵌套 SELECT 的进阶用法。',
+    tables: ['student', 'course', 'sc'],
+  },
+];
+
+// ============ 题库 25 道 ============
+// 字段说明：
+//   id: 题号
+//   group: 所属分组 key
+//   title: 题目标题
+//   difficulty: easy/medium/hard
+//   intro: 讲解段落（介绍关键字 + 用法，用 <b> 加粗关键字）
+//   imper: 祈使任务（明确要学生做什么，用 <b> 加粗关键字）
+//   starter: 起手 SQL（编辑器初始内容，学生修改后运行）
+//   answer: 参考答案
+//   hint: 提示（默认折叠）
+//   strictOrder: 是否严格按序对比
+//   note: 备注（可选）
+
+const LESSONS = [
+  // ===== SELECT 基础 =====
+  {
+    id: 'P01', group: 'select', title: 'SELECT 全表查询', difficulty: 'easy',
+    intro: '最基础的查询语句：<code>SELECT 列名 FROM 表名</code>。星号 <b>*</b> 表示"所有列"。<br>下面的示例查询 course 表的所有信息。',
+    imper: '请修改示例，查出 <b>student</b> 表里所有学生的完整信息（全部列）。',
+    starter: 'SELECT * FROM course;',
+    answer: 'SELECT * FROM student;',
+    strictOrder: false,
+    hint: '把 <code>course</code> 改成 <code>student</code> 即可。',
+  },
+  {
+    id: 'P02', group: 'select', title: '只查指定列', difficulty: 'easy',
+    intro: 'SELECT 后面除了 <code>*</code>，还可以写<b>具体列名</b>，多个列名用逗号分隔。这样只返回需要的列，其它列不显示。',
+    imper: '请查询学生的 <b>学号</b>（student_id）、<b>姓名</b>（name）、<b>系名</b>（department）三列。',
+    starter: 'SELECT student_id, name FROM student;',
+    answer: 'SELECT student_id, name, department FROM student;',
+    strictOrder: false,
+    hint: '在 name 后加一个逗号，再加 department。',
+  },
+  {
+    id: 'P03', group: 'select', title: 'DISTINCT 去重', difficulty: 'easy',
+    intro: '<b>DISTINCT</b> 用于去掉查询结果中的重复行。<br>示例：直接查系名会有 20 行（每个学生一行），加上 DISTINCT 只保留不同的系名。',
+    imper: '请查询学校目前有<b>哪些系</b>（不重复列出所有系名）。',
+    starter: 'SELECT department FROM student;',
+    answer: 'SELECT DISTINCT department FROM student;',
+    strictOrder: false,
+    hint: '在 <code>SELECT</code> 后面加上 <code>DISTINCT</code>。',
+  },
+  {
+    id: 'P04', group: 'select', title: 'AS 列别名', difficulty: 'easy',
+    intro: '<b>AS</b> 关键字用于给列（或表）起别名。别名可以是中文，让结果表头更易读。AS 可以省略。<br>写法：<code>SELECT 原名 AS 别名 FROM ...</code>',
+    imper: '请查所有学生的学号和姓名，把列名分别改成中文 <b>学号</b> 和 <b>姓名</b>。',
+    starter: 'SELECT student_id AS id, name FROM student;',
+    answer: 'SELECT student_id AS 学号, name AS 姓名 FROM student;',
+    strictOrder: false,
+    hint: 'name 后加 <code>AS 姓名</code>，把 id 改成 学号。',
+  },
+  {
+    id: 'P05', group: 'select', title: 'LIMIT 限制行数', difficulty: 'easy',
+    intro: '<b>LIMIT N</b> 只返回前 N 行结果，常用于查看数据样本或分页。<br><b>方言对照：</b>SQLite/MySQL/PostgreSQL 用 <code>LIMIT</code>；<b>SQL Server</b> 用 <code>SELECT TOP N *</code>；Oracle 用 <code>ROWNUM</code>。',
+    imper: '请查询 student 表的<b>前 5 行</b>（所有列）。',
+    starter: 'SELECT * FROM student LIMIT 10;',
+    answer: 'SELECT * FROM student LIMIT 5;',
+    strictOrder: true,
+    hint: '把 10 改成 5。',
+    note: '本题按主键顺序返回前 5 行，需严格按序对比。',
+  },
+
+  // ===== WHERE 条件过滤 =====
+  {
+    id: 'P06', group: 'where', title: 'WHERE 等值 + AND', difficulty: 'easy',
+    intro: '<b>WHERE</b> 子句用于过滤行。多个条件用 <b>AND</b>（且）或 <b>OR</b>（或）连接。<br>字符串必须用<b>单引号</b> <code>\'</code> 括起来（双引号在标准 SQL 里表示列名）。',
+    imper: '请查询<b>计算机科学</b>系的<b>男</b>生（返回学号、姓名两列）。',
+    starter: "SELECT student_id, name FROM student\n  WHERE department = '软件工程';",
+    answer: "SELECT student_id, name FROM student WHERE department = '计算机科学' AND gender = '男';",
+    strictOrder: false,
+    hint: '在 WHERE 后加两个条件，用 AND 连接。',
+  },
+  {
+    id: 'P07', group: 'where', title: 'BETWEEN 范围', difficulty: 'easy',
+    intro: '<b>BETWEEN a AND b</b> 用于范围过滤（<b>闭区间</b>，包含 a 和 b 两端）。<br>等价写法：<code>col &gt;= a AND col &lt;= b</code>。',
+    imper: '请查询<b>出生年在 2005 到 2006 之间</b>的学生（返回学号、姓名、出生年）。',
+    starter: 'SELECT student_id, name, birth_year FROM student\n  WHERE birth_year BETWEEN 2007 AND 2008;',
+    answer: 'SELECT student_id, name, birth_year FROM student WHERE birth_year BETWEEN 2005 AND 2006;',
+    strictOrder: false,
+    hint: '把 2007 改成 2005，把 2008 改成 2006。',
+  },
+  {
+    id: 'P08', group: 'where', title: 'IN 集合匹配', difficulty: 'easy',
+    intro: '<b>IN (v1, v2, ...)</b> 判断列值是否在一个集合中。等价于 <code>col = v1 OR col = v2 OR ...</code>，但更简洁。',
+    imper: '请查询<b>计算机科学</b>系或<b>数学</b>系的学生（返回学号、姓名、系名）。',
+    starter: "SELECT student_id, name, department FROM student\n  WHERE department IN ('软件工程');",
+    answer: "SELECT student_id, name, department FROM student WHERE department IN ('计算机科学','数学');",
+    strictOrder: false,
+    hint: '把括号里的一个系名换成两个（用逗号分隔）。',
+  },
+  {
+    id: 'P09', group: 'where', title: 'LIKE 模糊匹配', difficulty: 'easy',
+    intro: '<b>LIKE</b> 用于字符串模糊匹配，配合<b>通配符</b>使用：<br>• <b>%</b> 匹配任意长度的任意字符（含空）<br>• <b>_</b> 匹配一个任意字符<br>示例：<code>\'张%\'</code> 匹配"张"开头的字符串，<code>\'%张%\'</code> 匹配包含"张"的字符串。',
+    imper: '请查询所有<b>姓"张"</b>的学生（返回姓名和系名），按<b>学号排序</b>。',
+    starter: "SELECT name, department FROM student\n  WHERE name LIKE '%X%'\n  ORDER BY student_id;",
+    answer: "SELECT name, department FROM student WHERE name LIKE '张%' ORDER BY student_id;",
+    strictOrder: true,
+    hint: '把 <code>\'%X%\'</code> 改成 <code>\'张%\'</code>。',
+  },
+  {
+    id: 'P10', group: 'where', title: 'IS NULL 空值判断', difficulty: 'medium',
+    intro: '<b>NULL</b> 表示"未知"或"缺失"。判断 NULL <b>必须用</b> <code>IS NULL</code> 或 <code>IS NOT NULL</code>——不能用 <code>= NULL</code>（结果永远是 NULL，不是 true 也不是 false）。<br>本题涉及 <code>sc</code> 表（选课成绩表）。',
+    imper: '请找出 sc 表中<b>成绩为空</b>（缺考或未录入）的记录（返回学号和课程号）。',
+    starter: 'SELECT student_id, course_id FROM sc\n  WHERE score = NULL;',
+    answer: 'SELECT student_id, course_id FROM sc WHERE score IS NULL;',
+    strictOrder: false,
+    hint: '把 <code>= NULL</code> 改成 <code>IS NULL</code>。运行原示例看看会发生什么，就明白为什么必须改。',
+    note: '教材重点：三值逻辑（true/false/NULL），NULL 参与任何比较运算都得 NULL',
+  },
+
+  // ===== ORDER BY 排序 =====
+  {
+    id: 'P11', group: 'order', title: 'ORDER BY 单字段降序', difficulty: 'easy',
+    intro: '<b>ORDER BY 列名 [ASC|DESC]</b> 按指定列排序。ASC 升序（默认可省），<b>DESC</b> 降序。<br>常与 LIMIT 组合：查"前 5 名"、"最新 10 条"等。',
+    imper: '请查所有学生的<b>学号</b>和<b>姓名</b>，按学号<b>从大到小</b>排序，只显示<b>前 5 条</b>。',
+    starter: 'SELECT student_id, name FROM student\n  ORDER BY student_id ASC\n  LIMIT 5;',
+    answer: 'SELECT student_id, name FROM student ORDER BY student_id DESC LIMIT 5;',
+    strictOrder: true,
+    hint: '把 ASC 改成 DESC。',
+  },
+  {
+    id: 'P12', group: 'order', title: '多字段排序', difficulty: 'medium',
+    intro: '<b>ORDER BY</b> 后可以跟<b>多个字段</b>，用逗号分隔，每个字段单独指定升降序。<br>排序规则：先按第一个字段排；第一字段相等时，再按第二个字段排。',
+    imper: '请查所有学生的姓名、系名、出生年，按<b>系名升序</b>，同系内按<b>出生年降序</b>排列。',
+    starter: 'SELECT name, department, birth_year FROM student\n  ORDER BY department;',
+    answer: 'SELECT name, department, birth_year FROM student ORDER BY department ASC, birth_year DESC;',
+    strictOrder: true,
+    hint: '在 <code>ORDER BY department</code> 后加逗号，再加 <code>birth_year DESC</code>。',
+  },
+
+  // ===== 聚合与分组 =====
+  {
+    id: 'P13', group: 'agg', title: 'COUNT 计数', difficulty: 'easy',
+    intro: '<b>聚合函数</b>把多行汇总成一行/一个值。最常用的是 <b>COUNT</b>：<br>• <code>COUNT(*)</code> 数所有行（含 NULL）<br>• <code>COUNT(列名)</code> 数该列非 NULL 的行数<br>• <code>COUNT(DISTINCT 列名)</code> 数去重后的非 NULL 数量',
+    imper: '请统计全校<b>总学生数</b>，列名叫 <b>total</b>。',
+    starter: 'SELECT COUNT(*) FROM student;',
+    answer: 'SELECT COUNT(*) AS total FROM student;',
+    strictOrder: false,
+    hint: '在 <code>COUNT(*)</code> 后加 <code>AS total</code>。',
+  },
+  {
+    id: 'P14', group: 'agg', title: 'MAX / MIN / AVG', difficulty: 'easy',
+    intro: '常用聚合函数：<b>MAX / MIN / AVG / SUM</b>。<br>结果小数保留几位用 <b>ROUND(值, N)</b>。<br>示例：算"数据库原理及应用"（课程号 C001）的最高分。',
+    imper: '请一次算出 C001 的<b>最高分</b>、<b>最低分</b>、<b>平均分</b>（平均分保留 <b>2 位小数</b>），列名分别为 <b>最高</b>、<b>最低</b>、<b>平均</b>。',
+    starter: "SELECT MAX(score) AS 最高 FROM sc\n  WHERE course_id = 'C001';",
+    answer: "SELECT MAX(score) AS 最高, MIN(score) AS 最低, ROUND(AVG(score),2) AS 平均 FROM sc WHERE course_id='C001';",
+    strictOrder: false,
+    hint: '在 MAX 后加 MIN、再加 <code>ROUND(AVG(score), 2)</code>。三个都要写 AS 别名。',
+  },
+  {
+    id: 'P15', group: 'agg', title: 'GROUP BY 分组统计', difficulty: 'medium',
+    intro: '<b>GROUP BY 列名</b> 按该列分组，配合聚合函数得到"每组一个统计值"。<br><b>关键规则</b>：分组后 SELECT 里只能出现分组列或聚合函数，不能是其它原始列（否则语义不明）。',
+    imper: '请统计<b>每个系</b>的学生人数（列名 <b>department</b> 和 <b>cnt</b>），按人数<b>从多到少</b>排序。',
+    starter: 'SELECT department, COUNT(*) AS cnt FROM student\n  GROUP BY department;',
+    answer: 'SELECT department, COUNT(*) AS cnt FROM student GROUP BY department ORDER BY cnt DESC;',
+    strictOrder: true,
+    hint: '在结尾加 <code>ORDER BY cnt DESC</code>。',
+  },
+  {
+    id: 'P16', group: 'agg', title: '各课程平均分', difficulty: 'medium',
+    intro: '同样的分组模式，换成按 course_id 分组，聚合函数换成 AVG。<br>注意：没有任何选课记录的课程（如 C007）不会出现在结果中——这就是内连接式过滤。',
+    imper: '请统计每门课的<b>平均分</b>（列名 <b>course_id</b> 和 <b>平均分</b>，保留 <b>2 位小数</b>）。',
+    starter: 'SELECT course_id, AVG(score) FROM sc\n  GROUP BY course_id;',
+    answer: 'SELECT course_id, ROUND(AVG(score),2) AS 平均分 FROM sc GROUP BY course_id;',
+    strictOrder: false,
+    hint: '给 AVG(score) 套一层 <code>ROUND(..., 2)</code>，再加 <code>AS 平均分</code>。',
+    note: 'C007 编译原理无人选，本题不会返回它。要让它出现，见 P22 LEFT JOIN。',
+  },
+  {
+    id: 'P17', group: 'agg', title: 'HAVING 分组后过滤', difficulty: 'medium',
+    intro: '<b>WHERE 在分组之前过滤原始行</b>；<b>HAVING 在分组之后过滤分组结果</b>。<br>聚合函数（COUNT、AVG 等）只能出现在 HAVING 里，不能在 WHERE 里——因为分组前聚合还没算出来。',
+    imper: '请找出<b>选课人数 ≥ 5</b> 的课程（列名 <b>course_id</b> 和 <b>cnt</b>）。',
+    starter: 'SELECT course_id, COUNT(*) AS cnt FROM sc\n  GROUP BY course_id;',
+    answer: 'SELECT course_id, COUNT(*) AS cnt FROM sc GROUP BY course_id HAVING COUNT(*) >= 5;',
+    strictOrder: false,
+    hint: '在 <code>GROUP BY course_id</code> 后加 <code>HAVING COUNT(*) &gt;= 5</code>。',
+    note: '教材重点：WHERE vs HAVING 的执行时机差异',
+  },
+  {
+    id: 'P18', group: 'agg', title: 'HAVING 平均分门槛', difficulty: 'medium',
+    intro: '与 P17 类似，HAVING 后面可以用 AVG、MAX、SUM 等任意聚合函数。',
+    imper: '请找出<b>平均分 ≥ 85</b> 的课程（列名 <b>course_id</b> 和 <b>avg_s</b>，保留 <b>2 位小数</b>）。',
+    starter: 'SELECT course_id, AVG(score) AS avg_s FROM sc\n  GROUP BY course_id;',
+    answer: 'SELECT course_id, ROUND(AVG(score),2) AS avg_s FROM sc GROUP BY course_id HAVING AVG(score) >= 85;',
+    strictOrder: false,
+    hint: '给 AVG(score) 套 ROUND，末尾加 <code>HAVING AVG(score) &gt;= 85</code>。',
+  },
+
+  // ===== JOIN 多表连接 =====
+  {
+    id: 'P19', group: 'join', title: '三表内连接', difficulty: 'medium',
+    intro: '<b>JOIN ... ON ...</b> 把两张表按关联条件拼在一起。多表连接就是多个 JOIN 串联。<br>本题涉及三张表：<b>student</b>（学生）、<b>sc</b>（选课记录）、<b>course</b>（课程）。用<b>表别名</b>（如 s、c）能大幅简化写法。',
+    imper: '请列出<b>所有选课记录</b>：显示学生姓名、课程名、分数（每条选课一行）。',
+    starter: 'SELECT s.name, sc.score FROM student s\n  JOIN sc ON s.student_id = sc.student_id;',
+    answer: 'SELECT s.name, c.course_name, sc.score FROM student s JOIN sc ON s.student_id=sc.student_id JOIN course c ON sc.course_id=c.course_id;',
+    strictOrder: false,
+    hint: '在示例基础上再 JOIN 一次 course 表，用 <code>JOIN course c ON sc.course_id = c.course_id</code>，SELECT 里加上 <code>c.course_name</code>。',
+  },
+  {
+    id: 'P20', group: 'join', title: '数据库高分学生', difficulty: 'medium',
+    intro: '三表连接 + WHERE 复合条件 + ORDER BY —— 综合运用。用中文课程名过滤比用课程编号更可读。',
+    imper: '请查询<b>"数据库原理及应用"</b>课程<b>成绩 ≥ 85</b> 的学生姓名和分数，按分数<b>从高到低</b>排序。',
+    starter: `SELECT s.name, sc.score FROM student s
+  JOIN sc ON s.student_id = sc.student_id
+  JOIN course c ON sc.course_id = c.course_id
+  WHERE c.course_name = '高等数学';`,
+    answer: "SELECT s.name, sc.score FROM student s JOIN sc ON s.student_id=sc.student_id JOIN course c ON sc.course_id=c.course_id WHERE c.course_name='数据库原理及应用' AND sc.score>=85 ORDER BY sc.score DESC;",
+    strictOrder: true,
+    hint: '改课程名为"数据库原理及应用"，加 <code>AND sc.score &gt;= 85</code>，末尾加 <code>ORDER BY sc.score DESC</code>。',
+  },
+  {
+    id: 'P21', group: 'join', title: 'LEFT JOIN 找没选课的学生', difficulty: 'hard',
+    intro: '<b>LEFT JOIN</b> 保留左表<b>所有行</b>，右表没匹配时右表列为 NULL。<br>经典套路：<b>LEFT JOIN + WHERE 右表键 IS NULL</b> —— 找出"左表有但右表没有"的行。',
+    imper: '请找出<b>一门课都没选</b>的学生（返回学号和姓名，按学号排序）。',
+    starter: `SELECT s.student_id, s.name FROM student s
+  LEFT JOIN sc ON s.student_id = sc.student_id
+  WHERE sc.student_id IS NOT NULL
+  ORDER BY s.student_id;`,
+    answer: 'SELECT s.student_id, s.name FROM student s LEFT JOIN sc ON s.student_id=sc.student_id WHERE sc.student_id IS NULL ORDER BY s.student_id;',
+    strictOrder: true,
+    hint: '把 <code>IS NOT NULL</code> 改成 <code>IS NULL</code>。想想为什么？因为 LEFT JOIN 会给"没匹配上"的学生生成 sc 列全为 NULL 的行——这正是我们要找的。',
+    note: '经典 LEFT JOIN + IS NULL 模式，教材必考',
+  },
+  {
+    id: 'P22', group: 'join', title: 'LEFT JOIN 找没人选的课', difficulty: 'hard',
+    intro: '和 P21 完全对称：只需要把主表换成 course，就能找出"从未被任何学生选过"的课程。',
+    imper: '请找出<b>没有任何学生选</b>的课程（返回课程号和课程名）。',
+    starter: `SELECT c.course_id, c.course_name FROM course c
+  LEFT JOIN sc ON c.course_id = sc.course_id
+  WHERE sc.course_id IS NOT NULL;`,
+    answer: 'SELECT c.course_id, c.course_name FROM course c LEFT JOIN sc ON c.course_id=sc.course_id WHERE sc.course_id IS NULL;',
+    strictOrder: false,
+    hint: '把 <code>IS NOT NULL</code> 改成 <code>IS NULL</code>。',
+  },
+
+  // ===== 子查询 =====
+  {
+    id: 'P23', group: 'sub', title: 'IN 子查询', difficulty: 'medium',
+    intro: '<b>子查询</b>：把一条 SELECT 的结果嵌到另一条的 WHERE 里。<br><b>IN 子查询</b>常用套路：先从关联表挑出符合条件的主键集合，再用 IN 过滤主表。',
+    imper: '请查询<b>选过"数据库原理及应用"（C001）</b>的所有学生（返回学号和姓名，按学号排序）。',
+    starter: `SELECT student_id, name FROM student
+  WHERE student_id IN (
+    SELECT student_id FROM sc WHERE course_id = 'C002'
+  )
+  ORDER BY student_id;`,
+    answer: "SELECT student_id, name FROM student WHERE student_id IN (SELECT student_id FROM sc WHERE course_id='C001') ORDER BY student_id;",
+    strictOrder: true,
+    hint: '把子查询里的 <code>\'C002\'</code> 改成 <code>\'C001\'</code>。',
+  },
+  {
+    id: 'P24', group: 'sub', title: 'NOT IN 反向子查询', difficulty: 'medium',
+    intro: '<b>NOT IN</b> 是 IN 的反义。<br><b>陷阱</b>：如果子查询结果中<b>包含 NULL</b>，NOT IN 会返回<b>空集</b>（三值逻辑陷阱），此时推荐改用 <b>NOT EXISTS</b>。本题子查询不含 NULL，可以放心用 NOT IN。',
+    imper: '请查询<b>没有选过"数据库原理及应用"（C001）</b>的学生（返回学号和姓名，按学号排序）。',
+    starter: `SELECT student_id, name FROM student
+  WHERE student_id IN (
+    SELECT student_id FROM sc WHERE course_id = 'C001'
+  )
+  ORDER BY student_id;`,
+    answer: "SELECT student_id, name FROM student WHERE student_id NOT IN (SELECT student_id FROM sc WHERE course_id='C001') ORDER BY student_id;",
+    strictOrder: true,
+    hint: '把 <code>IN</code> 改成 <code>NOT IN</code>。',
+    note: '教材重点：NOT IN 遇 NULL 的坑（稳妥写法用 NOT EXISTS）',
+  },
+  {
+    id: 'P25', group: 'sub', title: '相关子查询：高于均分', difficulty: 'hard',
+    intro: '子查询也可以返回<b>单个值</b>放在比较运算符右边。<br>写法：<code>WHERE 列 &gt; (SELECT AVG(...) FROM ...)</code>。<br>本题：先算出 C001 的均分，再筛出高于均分的学生。',
+    imper: '请查询"数据库原理及应用"课程<b>成绩高于该课平均分</b>的学生（返回姓名和分数，按分数从高到低排序）。',
+    starter: `SELECT s.name, sc.score FROM student s
+  JOIN sc ON s.student_id = sc.student_id
+  WHERE sc.course_id = 'C001'
+    AND sc.score > 80
+  ORDER BY sc.score DESC;`,
+    answer: "SELECT s.name, sc.score FROM student s JOIN sc ON s.student_id=sc.student_id WHERE sc.course_id='C001' AND sc.score > (SELECT AVG(score) FROM sc WHERE course_id='C001') ORDER BY sc.score DESC;",
+    strictOrder: true,
+    hint: '把 <code>&gt; 80</code> 改成 <code>&gt; (SELECT AVG(score) FROM sc WHERE course_id=\'C001\')</code>。',
+    note: '相关子查询是教材 ch08 顶点难度，务必掌握',
+  },
+];
+
+// ============ 全局状态 ============
+let SQL, db;
+let currentGroup = GROUPS[0].key;
+let progress = JSON.parse(localStorage.getItem('sqlplay_progress_v3') || '{}');
+
+// ============ 初始化 ============
+async function init() {
+  try {
+    SQL = await initSqlJs({ locateFile: f => `https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/${f}` });
+    resetDB(true);
+    setStatus('ready', '就绪 · SQLite in-browser');
+    renderNav();
+    renderMain(currentGroup);
+    updateProgress();
+  } catch (e) {
+    setStatus('error', '加载失败: ' + e.message);
+    console.error(e);
+  }
+}
+
+function setStatus(cls, text) {
+  const el = document.getElementById('status-badge');
+  el.className = cls;
+  el.textContent = text;
+}
+
+function resetDB(silent) {
+  if (db) db.close();
+  db = new SQL.Database();
+  db.run(INIT_SQL);
+  if (!silent) alert('数据库已重置为初始状态。');
+}
+
+// ============ 侧边栏导航 ============
+function renderNav() {
+  const container = document.getElementById('nav-list');
+  let html = '';
+  GROUPS.forEach(g => {
+    const groupPassed = LESSONS.filter(L => L.group === g.key && progress[L.id] === 'passed').length;
+    const groupTotal = LESSONS.filter(L => L.group === g.key).length;
+    html += `<div class="lesson-group ${g.key === currentGroup ? 'active' : ''}" onclick="selectGroup('${g.key}')">
+      <span>${g.icon}</span>
+      <span>${g.title}</span>
+      <span style="margin-left:auto;font-size:11px;color:#8b949e;font-weight:400;">${groupPassed}/${groupTotal}</span>
+    </div>`;
+    if (g.key === currentGroup) {
+      LESSONS.filter(L => L.group === g.key).forEach(L => {
+        const state = progress[L.id] || 'none';
+        html += `<div class="lesson-item ${state}" onclick="scrollToQu('${L.id}')">
+          <span class="lesson-num">${L.id}</span>
+          <span class="title-text">${L.title}</span>
+          <span class="status-dot"></span>
+        </div>`;
+      });
+    }
+  });
+  container.innerHTML = html;
+}
+
+function selectGroup(key) {
+  currentGroup = key;
+  renderNav();
+  renderMain(key);
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function scrollToQu(id) {
+  const el = document.getElementById('qu-' + id);
+  if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+
+// ============ 主区渲染 ============
+function renderMain(groupKey) {
+  const g = GROUPS.find(x => x.key === groupKey);
+  const lessons = LESSONS.filter(L => L.group === groupKey);
+  const main = document.getElementById('main-content');
+
+  let html = `
+    <div class="group-header">
+      <h1>${g.icon} ${g.title}</h1>
+      <div class="subtitle">${g.subtitle}</div>
+    </div>
+    ${renderDBPreview(g.tables)}
+  `;
+
+  lessons.forEach(L => {
+    html += renderQu(L);
+  });
+
+  main.innerHTML = html;
+
+  // 绑定每题的事件
+  lessons.forEach(L => bindQuEvents(L));
+}
+
+// ============ 顶部数据表预览 ============
+function renderDBPreview(tables) {
+  const tabs = tables.map((t, i) =>
+    `<div class="tab ${i === 0 ? 'active' : ''}" onclick="switchDBTab('${t}', this)">${t}</div>`
+  ).join('');
+  return `
+    <div class="db-preview">
+      <div class="db-preview-header">
+        <span>📊 数据表预览（本节涉及的表，共 ${tables.length} 张）</span>
+        <div class="tabs">${tabs}</div>
+      </div>
+      <div class="db-preview-body" id="db-preview-body">${renderTablePreview(tables[0])}</div>
+    </div>
+  `;
+}
+
+function switchDBTab(t, el) {
+  el.parentNode.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('db-preview-body').innerHTML = renderTablePreview(t);
+}
+
+function renderTablePreview(t) {
+  try {
+    const res = db.exec(`SELECT * FROM ${t}`);
+    if (!res.length) return '<div style="padding:20px;color:#8b949e">（空表）</div>';
+    const { columns, values } = res[0];
+    const shown = values.slice(0, 8);
+    let html = '<table><thead><tr>';
+    columns.forEach(c => { html += `<th>${escapeHtml(c)}</th>`; });
+    html += '</tr></thead><tbody>';
+    shown.forEach(row => {
+      html += '<tr>';
+      row.forEach(v => {
+        const isNum = typeof v === 'number';
+        const cls = isNum ? ' class="r"' : '';
+        html += `<td${cls}>${v === null ? '<i style="color:#8b949e">NULL</i>' : escapeHtml(String(v))}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    if (values.length > shown.length) {
+      html += `<div style="padding:6px 12px;color:#8b949e;font-size:11px;">…共 ${values.length} 行，仅显示前 ${shown.length} 行</div>`;
+    }
+    return html;
+  } catch (e) {
+    return `<div style="padding:20px;color:#cf222e">读取失败: ${e.message}</div>`;
+  }
+}
+
+// ============ 题目卡片渲染 ============
+function renderQu(L) {
+  const state = progress[L.id] || 'none';
+  const stateIcon = state === 'passed' ? '✅' : (state === 'attempted' ? '🟠' : '');
+  return `
+    <div class="qu" id="qu-${L.id}">
+      <h2>
+        <span class="qid">${L.id}</span>
+        <span>${L.title}</span>
+        <span class="badge ${L.difficulty}">${difficultyLabel(L.difficulty)}</span>
+        <span style="margin-left:auto;font-size:14px">${stateIcon}</span>
+      </h2>
+      <div class="intro">${L.intro}</div>
+      <div class="imper">🎯 ${L.imper}</div>
+      ${L.note ? `<div class="note">📌 ${L.note}</div>` : ''}
+      <div class="editor-wrap">
+        <textarea id="sql-${L.id}" spellcheck="false">${escapeHtml(L.starter)}</textarea>
+        <button class="reset-starter" onclick="resetStarter('${L.id}')" title="恢复起手 SQL">↺ 起手</button>
+      </div>
+      <div class="qu-actions">
+        <button class="blue" onclick="runQu('${L.id}')">▶ 运行</button>
+        <button class="primary" onclick="checkQu('${L.id}')">✓ 对答案</button>
+        <button class="ghost" onclick="clearQu('${L.id}')">🗑 清空</button>
+      </div>
+      <div class="feedback" id="feedback-${L.id}"></div>
+      <div class="result-box" id="result-${L.id}">
+        <div class="result-header">
+          <span id="result-title-${L.id}">运行结果</span>
+          <span id="result-meta-${L.id}"></span>
+        </div>
+        <div class="result-body" id="result-body-${L.id}"></div>
+      </div>
+      <details class="hint-block">
+        <summary>💡 提示</summary>
+        <div>${L.hint || '独立思考一下~'}</div>
+      </details>
+      <details class="ans-block">
+        <summary>👀 参考答案</summary>
+        <pre>${escapeHtml(L.answer)}</pre>
+      </details>
+    </div>
+  `;
+}
+
+function bindQuEvents(L) {
+  const ta = document.getElementById('sql-' + L.id);
+  if (!ta) return;
+  // Tab 缩进
+  ta.addEventListener('keydown', function(e) {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const s = this.selectionStart, en = this.selectionEnd;
+      this.value = this.value.substring(0, s) + '  ' + this.value.substring(en);
+      this.selectionStart = this.selectionEnd = s + 2;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      runQu(L.id);
+    }
+  });
+}
+
+function difficultyLabel(d) {
+  return { easy: '简单', medium: '中等', hard: '困难' }[d] || d;
+}
+
+// ============ 每题的运行/对答/清空 ============
+function getSQL(qid) {
+  return document.getElementById('sql-' + qid).value.trim();
+}
+
+function runQu(qid) {
+  const sql = getSQL(qid);
+  if (!sql) { showQuFeedback(qid, 'fail', '请先输入 SQL 语句。'); return; }
+  const box = document.getElementById('result-' + qid);
+  const body = document.getElementById('result-body-' + qid);
+  const title = document.getElementById('result-title-' + qid);
+  const meta = document.getElementById('result-meta-' + qid);
+  hideQuFeedback(qid);
+  box.classList.add('show');
+  try {
+    const t0 = performance.now();
+    const results = db.exec(sql);
+    const dt = (performance.now() - t0).toFixed(1);
+    title.textContent = '✓ 运行成功';
+    if (!results.length) {
+      body.innerHTML = '<div style="padding:16px;color:#6e7781;text-align:center;font-size:13px">✓ 执行成功，无返回结果（可能是 DDL/DML 语句）</div>';
+      meta.textContent = `${dt}ms`;
+    } else {
+      const html = results.map(r => renderResultTable(r.columns, r.values)).join('');
+      body.innerHTML = html;
+      const total = results.reduce((s, r) => s + r.values.length, 0);
+      meta.textContent = `${total} 行 · ${dt}ms`;
+    }
+    // 标记为尝试过
+    if (progress[qid] !== 'passed') {
+      progress[qid] = 'attempted';
+      saveProgress(); renderNav(); updateProgress();
+    }
+  } catch (e) {
+    title.textContent = '✗ 语法错误';
+    meta.textContent = '';
+    body.innerHTML = `<div class="err-msg">${escapeHtml(e.message)}</div>`;
+    showQuFeedback(qid, 'fail', '❌ SQL 报错，请检查语法。');
+  }
+}
+
+function checkQu(qid) {
+  const L = LESSONS.find(x => x.id === qid);
+  const sql = getSQL(qid);
+  if (!sql) { showQuFeedback(qid, 'fail', '请先输入 SQL 语句。'); return; }
+  let userRes, refRes;
+  try { userRes = db.exec(sql); }
+  catch (e) { showQuFeedback(qid, 'fail', '❌ 你的 SQL 报错：' + escapeHtml(e.message)); return; }
+  try { refRes = db.exec(L.answer); }
+  catch (e) { showQuFeedback(qid, 'fail', '⚠️ 参考答案执行失败：' + escapeHtml(e.message)); return; }
+
+  // 也顺便显示运行结果
+  const box = document.getElementById('result-' + qid);
+  const body = document.getElementById('result-body-' + qid);
+  const title = document.getElementById('result-title-' + qid);
+  const meta = document.getElementById('result-meta-' + qid);
+  box.classList.add('show');
+  if (userRes.length) {
+    body.innerHTML = renderResultTable(userRes[0].columns, userRes[0].values);
+    title.textContent = '你的结果';
+    meta.textContent = `${userRes[0].values.length} 行`;
+  }
+
+  const cmp = compareResults(userRes, refRes, L.strictOrder);
+  if (cmp.pass) {
+    showQuFeedback(qid, 'pass', `✅ <b>通过！</b> ${cmp.msg}`);
+    progress[qid] = 'passed';
+    saveProgress(); renderNav(); updateProgress();
+    // 卡片头的状态图标更新
+    const iconEl = document.querySelector(`#qu-${qid} h2 > span:last-child`);
+    if (iconEl) iconEl.textContent = '✅';
+  } else {
+    showQuFeedback(qid, 'fail', `❌ <b>未通过。</b> ${cmp.msg}`);
+    if (progress[qid] !== 'passed') {
+      progress[qid] = 'attempted';
+      saveProgress(); renderNav(); updateProgress();
+    }
+  }
+}
+
+function clearQu(qid) {
+  document.getElementById('sql-' + qid).value = '';
+  hideQuFeedback(qid);
+  document.getElementById('result-' + qid).classList.remove('show');
+}
+
+function resetStarter(qid) {
+  const L = LESSONS.find(x => x.id === qid);
+  document.getElementById('sql-' + qid).value = L.starter;
+  hideQuFeedback(qid);
+}
+
+function showQuFeedback(qid, cls, msg) {
+  const el = document.getElementById('feedback-' + qid);
+  el.className = 'feedback show ' + cls;
+  el.innerHTML = msg;
+}
+function hideQuFeedback(qid) {
+  document.getElementById('feedback-' + qid).className = 'feedback';
+}
+
+// ============ 结果表渲染 ============
+function renderResultTable(columns, values, maxRows) {
+  const rows = maxRows ? values.slice(0, maxRows) : values;
+  const more = maxRows && values.length > maxRows ? `<div style="padding:6px;color:#8b949e;font-size:11px;text-align:center;">…共 ${values.length} 行，仅显示前 ${maxRows} 行</div>` : '';
+  let html = '<table class="result"><thead><tr>';
+  columns.forEach(c => html += `<th>${escapeHtml(c)}</th>`);
+  html += '</tr></thead><tbody>';
+  rows.forEach(row => {
+    html += '<tr>';
+    row.forEach(v => {
+      html += v === null ? '<td class="null">NULL</td>' : `<td>${escapeHtml(String(v))}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>' + more;
+  return html;
+}
+
+// ============ 比较 ============
+function compareResults(userRes, refRes, strictOrder) {
+  if (!userRes.length && !refRes.length) return { pass: true, msg: '双方均无返回。' };
+  if (!userRes.length) return { pass: false, msg: '你的 SQL 没有返回结果集。' };
+  if (!refRes.length) return { pass: false, msg: '参考答案无返回，但你的有。' };
+  const u = userRes[0], r = refRes[0];
+  if (u.columns.length !== r.columns.length) return { pass: false, msg: `列数不一致：你 ${u.columns.length} 列，期望 ${r.columns.length} 列。` };
+  if (u.values.length !== r.values.length) return { pass: false, msg: `行数不一致：你 ${u.values.length} 行，期望 ${r.values.length} 行。` };
+  const uv = strictOrder ? u.values : sortRows(u.values);
+  const rv = strictOrder ? r.values : sortRows(r.values);
+  for (let i = 0; i < uv.length; i++) {
+    for (let j = 0; j < uv[i].length; j++) {
+      const a = uv[i][j], b = rv[i][j];
+      if (typeof a === 'number' && typeof b === 'number') {
+        if (Math.abs(a - b) > 0.001) return { pass: false, msg: `第 ${i+1} 行第 ${j+1} 列：你=${a}，期望=${b}。` };
+      } else if (String(a ?? '') !== String(b ?? '')) {
+        const ordNote = strictOrder ? '（本题要求严格按 ORDER BY 排序）' : '';
+        return { pass: false, msg: `第 ${i+1} 行第 ${j+1} 列${ordNote}：你="${a}"，期望="${b}"。` };
+      }
+    }
+  }
+  return { pass: true, msg: `列数 ${u.columns.length}，行数 ${u.values.length}，全部匹配。` };
+}
+
+function sortRows(rows) {
+  return rows.slice().sort((a, b) => {
+    for (let i = 0; i < a.length; i++) {
+      const av = String(a[i] ?? ''), bv = String(b[i] ?? '');
+      if (av < bv) return -1;
+      if (av > bv) return 1;
+    }
+    return 0;
+  });
+}
+
+// ============ 进度 ============
+function saveProgress() { localStorage.setItem('sqlplay_progress_v3', JSON.stringify(progress)); }
+function updateProgress() {
+  const passed = Object.values(progress).filter(v => v === 'passed').length;
+  document.getElementById('progress-text').textContent = `进度 ${passed} / ${LESSONS.length}`;
+  document.getElementById('progress-bar-inner').style.width = (passed / LESSONS.length * 100) + '%';
+}
+function resetProgress() {
+  if (!confirm('确定清除所有进度？（数据库不受影响）')) return;
+  progress = {}; saveProgress(); renderNav(); updateProgress();
+  renderMain(currentGroup); // 刷新卡片状态图标
+}
+
+// ============ 工具 ============
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+
+init();
+</script>
+</body>
+</html>
