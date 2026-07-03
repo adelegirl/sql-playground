@@ -436,7 +436,7 @@
 </head>
 <body>
 <header>
-  <h1>❄️ SQL 练习场 <span style="opacity:0.7;font-size:12px;font-weight:400;">v0.4 preview · 上海电力大学·数据库原理及应用</span></h1>
+  <h1>❄️ SQL 练习场 <span style="opacity:0.7;font-size:12px;font-weight:400;">v0.5 preview · 上海电力大学·数据库原理及应用</span></h1>
   <div class="status">状态：<span id="status-badge" class="loading">正在加载 SQLite 引擎…</span></div>
 </header>
 
@@ -509,7 +509,27 @@ INSERT INTO student VALUES
 ('20240402','蒋华','男','数学',2007),
 ('20240403','沈玲','女','数学',2006),
 ('20240404','张涛','男','数学',2006),
-('20240405','杨柳','女','数学',2005);
+('20240405','杨柳','女','数学',2005),
+('20240501','刘晨','男','电子工程',2005),
+('20240502','陈欣','女','电子工程',2006),
+('20240503','杨帆','男','电子工程',2006),
+('20240504','林薇','女','电子工程',2007),
+('20240505','许亮','男','电子工程',2005),
+('20240506','高源','男','电子工程',2006),
+('20240507','董梦','女','电子工程',2006),
+('20240508','谢阳','男','电子工程',2007),
+('20240509','钟航','男','电子工程',2005),
+('20240510','夏冉','女','电子工程',2006),
+('20240601','唐雪','女','经济管理',2006),
+('20240602','曹健','男','经济管理',2007),
+('20240603','徐颖','女','经济管理',2005),
+('20240604','范强','男','经济管理',2006),
+('20240605','吕娟','女','经济管理',2006),
+('20240606','袁涛','男','经济管理',2005),
+('20240607','邓雅','女','经济管理',2006),
+('20240608','傅军','男','经济管理',2007),
+('20240609','蔡菲','女','经济管理',2006),
+('20240610','程晓','女','经济管理',2005);
 
 INSERT INTO course VALUES
 ('C001','数据库原理及应用',4,'李教授'),
@@ -519,7 +539,14 @@ INSERT INTO course VALUES
 ('C005','计算机网络',3,'陈教授'),
 ('C006','软件工程',3,'赵教授'),
 ('C007','编译原理',3,'钱教授'),
-('C008','人工智能导论',2,'孙教授');
+('C008','人工智能导论',2,'孙教授'),
+('C009','电路分析',3,'孙教授'),
+('C010','信号与系统',4,'钱教授'),
+('C011','微机原理',3,'李教授'),
+('C012','微观经济学',3,'赵教授'),
+('C013','会计学原理',3,'周教授'),
+('C014','管理学',2,'吴教授'),
+('C015','大数据分析',3,'郑教授');
 
 INSERT INTO sc VALUES
 ('20240101','C001',85),('20240101','C002',78),('20240101','C003',92),
@@ -536,7 +563,25 @@ INSERT INTO sc VALUES
 ('20240303','C001',88),('20240303','C005',NULL),
 ('20240304','C005',72),
 ('20240401','C003',98),('20240402','C003',94),('20240403','C003',89),
-('20240404','C003',76);
+('20240404','C003',76),
+('20240501','C001',80),('20240501','C009',88),('20240501','C010',76),
+('20240502','C001',95),('20240502','C009',92),
+('20240503','C009',70),('20240503','C010',NULL),
+('20240504','C009',85),('20240504','C011',78),
+('20240505','C010',52),('20240505','C011',65),
+('20240506','C001',72),('20240506','C009',68),
+('20240507','C009',90),('20240507','C011',82),
+('20240508','C010',58),('20240508','C011',NULL),
+('20240509','C009',75),
+('20240601','C012',88),('20240601','C013',82),('20240601','C014',76),
+('20240602','C001',68),('20240602','C012',75),('20240602','C013',80),
+('20240603','C012',100),('20240603','C014',95),
+('20240604','C012',48),('20240604','C013',62),
+('20240605','C012',85),('20240605','C013',88),
+('20240606','C013',72),('20240606','C014',NULL),
+('20240607','C012',70),
+('20240608','C012',82),
+('20240609','C013',90);
 `;
 
 // ============ 分组配置 ============
@@ -905,6 +950,400 @@ const LESSONS = [
       '把 <code>AND sc.score &gt; 80</code> 里的 <code>80</code> 换成 <code>(SELECT AVG(score) FROM sc WHERE course_id=\'C001\')</code>。这就是<b>标量子查询</b>——子查询作为单值，直接放在比较运算符右边。',
     ],
     note: '相关子查询是教材 ch08 顶点难度，务必掌握',
+  },
+
+  // ========================================
+  // ===== v0.5 新增 25 题 (P26-P50) =====
+  // ========================================
+
+  // ===== SELECT 续 +5 (P26-P30) =====
+  {
+    id: 'P26', group: 'select', title: '计算列：算年龄', difficulty: 'easy',
+    intro: 'SELECT 后面不仅可以写列名，还可以写<b>表达式</b>。比如用 <code>2026 - birth_year</code> 就能算出学生的年龄。表达式后面还可以加 <code>AS 别名</code> 让列标题更好看。',
+    imper: '请查询<b>所有学生</b>的姓名和<b>2026 年的年龄</b>（列标题显示为 age）。',
+    starter: 'SELECT name FROM student;',
+    answer: 'SELECT name, 2026 - birth_year AS age FROM student;',
+    strictOrder: false,
+    hint: '在 SELECT 后面加 <code>2026 - birth_year AS age</code> 即可，注意别忘了逗号。',
+    hints: [
+      'SELECT 后面可以写表达式，比如 <code>1 + 1</code> 都会返回 2。',
+      '用 <code>2026 - birth_year</code> 就能算出年龄。',
+      '完整写法：在 name 后面加逗号，再写 <code>2026 - birth_year AS age</code>。AS 可以给计算列起别名。',
+    ],
+  },
+  {
+    id: 'P27', group: 'select', title: '字符串拼接', difficulty: 'easy',
+    intro: '用 <code>||</code> 可以把两列内容拼到一起，比如 <code>name || sex</code>。如果还想中间加点文字，可以再加一组拼接：<code>name || \'，\' || department</code>。<b>注意</b>：如果某一列是 NULL，整段拼接结果会变成 NULL，需要配合 COALESCE 处理（下一题会学）。',
+    imper: '请查询每位学生的姓名和性别，拼成"<b>姓名(性别)</b>"格式（列标题 info）。',
+    starter: 'SELECT name, gender FROM student;',
+    answer: "SELECT name || '(' || gender || ')' AS info FROM student;",
+    strictOrder: false,
+    hint: '用 <code>||</code> 把字符串常量 \'<code>(</code>\'<code>、gender、\'</code>)<code>\' 依次拼到 name 后面，整段用 AS info 起别名。',
+    hints: [
+      '字符串常量要用单引号括起来，比如 \'<code>(</code><code>\'。</code>',
+      '拼接结构：<code>name || \'（左括号）\' || gender || \'（右括号）\'</code>。',
+      '完整写法：<code>SELECT name || \'(\' || gender || \')\' AS info FROM student;</code>',
+    ],
+  },
+  {
+    id: 'P28', group: 'select', title: 'COALESCE 处理 NULL', difficulty: 'easy',
+    intro: '<code>COALESCE(列, 默认值)</code> 会返回第一个非 NULL 的值。当成绩是 NULL 时显示 "未录入"，否则显示真实分数——这是最常用的 NULL 兜底写法。',
+    imper: '请查询<b>选课表(sc)</b>的所有记录，但 score 列显示成：NULL 换成 \'<code>未录入</code>\'，非 NULL 显示分数。列标题 result。',
+    starter: 'SELECT student_id, course_id, score FROM sc;',
+    answer: "SELECT student_id, course_id, COALESCE(CAST(score AS TEXT), '未录入') AS result FROM sc;",
+    strictOrder: false,
+    hint: '用 <code>COALESCE(score, \'未录入\')</code> 兜底；但 score 是整数，\'未录入\' 是字符串，需要先用 <code>CAST(score AS TEXT)</code> 把整数转成字符串，两者类型才能一致。',
+    hints: [
+      'COALESCE 的所有参数必须是同一类型，否则 sql.js 会按第一列的类型截断。',
+      '用 <code>CAST(score AS TEXT)</code> 把整数转成文本。',
+      '完整写法：<code>COALESCE(CAST(score AS TEXT), \'未录入\')</code> AS result。',
+    ],
+  },
+  {
+    id: 'P29', group: 'select', title: 'CASE WHEN 打等级', difficulty: 'medium',
+    intro: '<code>CASE WHEN 条件 THEN 结果 ... ELSE 默认结果 END</code> 就像 Excel 的 IF 嵌套，可以在 SELECT 里按条件输出不同值。成绩分级就是典型场景：≥90 优、≥80 良、≥70 中、≥60 及格、其他不及格。<b>注意</b>：NULL 参与比较结果是 UNKNOWN，会跳过所有 WHEN 走到 ELSE，要单独用 <code>WHEN score IS NULL THEN</code> 处理。',
+    imper: '请查询<b>选课表(sc)</b>的所有记录（只要 student_id、course_id、score），新增一列 grade 显示等级：NULL\'未录入\' / ≥90\'优\' / ≥80\'良\' / ≥70\'中\' / ≥60\'及格\' / 其他\'不及格\'。',
+    starter: 'SELECT student_id, course_id, score FROM sc;',
+    answer: `SELECT student_id, course_id, score,
+  CASE
+    WHEN score IS NULL THEN '未录入'
+    WHEN score >= 90 THEN '优'
+    WHEN score >= 80 THEN '良'
+    WHEN score >= 70 THEN '中'
+    WHEN score >= 60 THEN '及格'
+    ELSE '不及格'
+  END AS grade
+FROM sc;`,
+    strictOrder: false,
+    hint: '第一条 WHEN 就写 <code>WHEN score IS NULL THEN \'未录入\'</code>，因为 NULL &gt;= 90 结果是 UNKNOWN 会被跳过。CASE WHEN 按顺序求值，命中一个就停。',
+    hints: [
+      'NULL &gt;= 90 的结果不是 FALSE 而是 UNKNOWN，所以 NULL 记录会跳过 WHEN score &gt;= 90 这段。',
+      '要在第一条加 <code>WHEN score IS NULL THEN \'未录入\'</code>，把 NULL 情况单独拎出来。',
+      '完整结构：<code>CASE WHEN score IS NULL THEN \'未录入\' WHEN ... THEN ... ELSE \'不及格\' END AS grade</code>。',
+    ],
+  },
+  {
+    id: 'P30', group: 'select', title: '字符串函数', difficulty: 'medium',
+    intro: 'SQLite 常用的字符串函数：<code>LEFT(s, n)</code> 取左边 n 个字符；<code>RIGHT(s, n)</code> 取右边 n 个字符；<code>SUBSTR(s, start, len)</code> 从 start 开始取 len 个字符（start 从 1 开始）；<code>LENGTH(s)</code> 返回字符数。注意：sql.js 不支持 RIGHT()，可用 <code>SUBSTR(s, -n)</code> 替代。',
+    imper: '请查询<b>课程表(course)</b>，显示：课程名前 2 个字符(front2)、课程名后 2 个字符(last2)、课程名字符长度(len)。',
+    starter: "SELECT course_name FROM course WHERE course_id = 'C001';",
+    answer: 'SELECT course_name, SUBSTR(course_name, 1, 2) AS front2, SUBSTR(course_name, -2) AS last2, LENGTH(course_name) AS len FROM course;',
+    strictOrder: false,
+    hint: 'substr(course_name, 1, 2) 取前 2 字；substr(course_name, -2) 取末 2 字（sql.js 用负数起始位置代替 RIGHT）；length(course_name) 算长度。',
+    hints: [
+      'SUBSTR(s, start, len)：start 为负数时从末尾算。',
+      'LENGTH(s) 直接返回字符数（不是字节数）。',
+      '三列分别是 <code>SUBSTR(course_name, 1, 2)</code> / <code>SUBSTR(course_name, -2)</code> / <code>LENGTH(course_name)</code>。',
+    ],
+  },
+
+  // ===== WHERE 续 +3 (P31-P33) =====
+  {
+    id: 'P31', group: 'where', title: 'NOT IN 反向筛选', difficulty: 'easy',
+    intro: '上一题学了 IN 筛选"在集合里"的。反过来，<code>NOT IN</code> 就是"不在集合里"。常用于排除特定 ID、特定人。',
+    imper: '请查出<b>不在</b>计算机科学、数学这两个系的所有学生（返回姓名、系名）。',
+    starter: 'SELECT * FROM student WHERE department = \'计算机科学\';',
+    answer: "SELECT name, department FROM student WHERE department NOT IN ('计算机科学', '数学');",
+    strictOrder: false,
+    hint: '把 <code>department = ...</code> 改成 <code>department NOT IN (\'计算机科学\', \'数学\')</code>。',
+    hints: [
+      'IN (...) 是多个 OR 的简写；NOT IN (...) 就是多个 &lt;&gt; 的简写。',
+      '括号里用逗号分隔多个值，每个值都要用单引号。',
+      '完整写法：<code>WHERE department NOT IN (\'计算机科学\', \'数学\')</code>。',
+    ],
+  },
+  {
+    id: 'P32', group: 'where', title: '复合条件与优先级', difficulty: 'easy',
+    intro: '当 AND 和 OR 同时出现时，<b>AND 优先级高于 OR</b>。比如 <code>A OR B AND C</code> 会被解析成 <code>A OR (B AND C)</code>，结果可能跟直觉不一样。遇到复杂条件，<b>用括号明确优先级</b>是安全做法。',
+    imper: '请查出<b>计算机科学系或软件工程系</b>中，<b>2006 年出生</b>的学生（姓名、系、出生年）。',
+    starter: 'SELECT name, department, birth_year FROM student WHERE department = \'计算机科学\' AND birth_year = 2006;',
+    answer: "SELECT name, department, birth_year FROM student WHERE (department = '计算机科学' OR department = '软件工程') AND birth_year = 2006;",
+    strictOrder: false,
+    hint: '用括号把两个系名条件包起来：<code>(department = ... OR department = ...)</code>，再 AND birth_year = 2006。',
+    hints: [
+      '如果不加括号，<code>A OR B AND C</code> 会按 <code>A OR (B AND C)</code> 解析，结果会多出"计算机科学所有学生"。',
+      '用圆括号显式分组：<code>(A OR B) AND C</code>。',
+      '完整写法：<code>WHERE (department = \'计算机科学\' OR department = \'软件工程\') AND birth_year = 2006</code>。',
+    ],
+  },
+  {
+    id: 'P33', group: 'where', title: '多条 LIKE 匹配', difficulty: 'medium',
+    intro: 'LIKE 可以写多次用 AND 串起来，相当于"同时满足多个模糊匹配"。典型场景：姓名里既要有某字，还要满足某模式。',
+    imper: '请查出<b>姓名里既包含"张"又包含"敏"</b>的学生（返回姓名、系）。',
+    starter: "SELECT name, department FROM student WHERE name LIKE '张%';",
+    answer: "SELECT name, department FROM student WHERE name LIKE '%张%' AND name LIKE '%敏%';",
+    strictOrder: false,
+    hint: 'LIKE 可以同时写多个：<code>name LIKE \'%张%\' AND name LIKE \'%敏%\'</code>，相当于"名字里既有张也有敏"。',
+    hints: [
+      'LIKE 是单列单次匹配，要看"同时包含多个字"就要写多个 LIKE 用 AND 串起来。',
+      '每个 LIKE 前后都要加 % 表示任意位置出现。',
+      '完整写法：<code>WHERE name LIKE \'%张%\' AND name LIKE \'%敏%\'</code>。',
+    ],
+  },
+
+  // ===== ORDER 续 +2 (P34-P35) =====
+  {
+    id: 'P34', group: 'order', title: 'ORDER BY 表达式排序', difficulty: 'easy',
+    intro: 'ORDER BY 后面不只能写列名，也可以写<b>表达式</b>，比如按年龄、按成绩换算排序。甚至可以用 SELECT 里的别名。',
+    imper: '请查出所有学生，按<b>年龄从小到大</b>排序（年龄 = 2026 - birth_year，同时显示年龄列 age）。',
+    starter: 'SELECT name, birth_year FROM student ORDER BY birth_year;',
+    answer: 'SELECT name, 2026 - birth_year AS age FROM student ORDER BY age;',
+    strictOrder: true,
+    hint: 'ORDER BY 可以直接用 SELECT 里的别名 age，年龄小在前是升序（默认），不用写 ASC。',
+    hints: [
+      'SELECT 里已经算了 age 别名，ORDER BY 就能直接用。',
+      '年龄小 = 出生年大，但直接 ORDER BY age 更直观。',
+      '完整写法：SELECT 里加 <code>2026 - birth_year AS age</code>，ORDER BY <code>age</code>。',
+    ],
+  },
+  {
+    id: 'P35', group: 'order', title: 'LIMIT + OFFSET 分页', difficulty: 'medium',
+    intro: '<code>LIMIT n</code> 只取前 n 条；加上 <code>OFFSET m</code> 跳过前 m 条再取。这是"分页查询"的骨架：每页 n 条，第 k 页就用 OFFSET (k-1)*n。',
+    imper: '请查出学生表按学号升序排列后的<b>第 6-10 条</b>（即跳过前 5 条，取 5 条）。显示学号、姓名。',
+    starter: 'SELECT student_id, name FROM student ORDER BY student_id LIMIT 5;',
+    answer: 'SELECT student_id, name FROM student ORDER BY student_id LIMIT 5 OFFSET 5;',
+    strictOrder: true,
+    hint: '在 LIMIT 5 后加 <code>OFFSET 5</code>，就能跳过前 5 条，取第 6-10 条。',
+    hints: [
+      'OFFSET 表示"跳过多少条"，OFFSET 5 就是跳过前 5 条。',
+      'LIMIT + OFFSET 配合 ORDER BY 使用才能确定取到哪些具体记录。',
+      '完整写法：<code>ORDER BY student_id LIMIT 5 OFFSET 5</code>。',
+    ],
+  },
+
+  // ===== AGG 续 +6 (P36-P41) =====
+  {
+    id: 'P36', group: 'agg', title: 'COUNT DISTINCT 去重计数', difficulty: 'easy',
+    intro: '<code>COUNT(*)</code> 算行数（含重复），<code>COUNT(列)</code> 算非 NULL 个数；<code>COUNT(DISTINCT 列)</code> 算列里有多少个<b>不同的非 NULL 值</b>。想知道"有多少人选过课"（不管选几门），就要 DISTINCT 学号。',
+    imper: '请查询<b>有多少个不同的学生</b>在选课表里留下过记录。',
+    starter: 'SELECT COUNT(*) FROM sc;',
+    answer: 'SELECT COUNT(DISTINCT student_id) FROM sc;',
+    strictOrder: false,
+    hint: '把 <code>COUNT(*)</code> 改成 <code>COUNT(DISTINCT student_id)</code>，同一个学生选多门课也只会被算一次。',
+    hints: [
+      'COUNT(*) 会算出选课记录总数（含重复学生），但题目要"不同学生数"。',
+      'DISTINCT 去重后再 COUNT，就能得到不同学号的个数。',
+      '完整写法：<code>COUNT(DISTINCT student_id)</code>。',
+    ],
+  },
+  {
+    id: 'P37', group: 'agg', title: '条件计数', difficulty: 'easy',
+    intro: '把 COUNT 和 CASE WHEN 结合：<code>COUNT(CASE WHEN 条件 THEN 1 END)</code>，可以只统计满足条件的行数。因为 COUNT 会跳过 NULL，CASE 不命中时返回的 NULL 就不被计数。',
+    imper: '请查询选课表里<b>成绩 ≥ 90 的记录数</b>。',
+    starter: 'SELECT COUNT(*) FROM sc;',
+    answer: 'SELECT COUNT(CASE WHEN score >= 90 THEN 1 END) FROM sc;',
+    strictOrder: false,
+    hint: '用 <code>COUNT(CASE WHEN score &gt;= 90 THEN 1 END)</code>，CASE 不命中时默认返回 NULL，COUNT 会跳过它。',
+    hints: [
+      'COUNT(列) 会跳过 NULL，只计非 NULL 个数。',
+      'CASE WHEN 不命中时返回 NULL，刚好被 COUNT 跳过。',
+      '完整写法：<code>COUNT(CASE WHEN score &gt;= 90 THEN 1 END)</code>。',
+    ],
+  },
+  {
+    id: 'P38', group: 'agg', title: '每人选课门数', difficulty: 'medium',
+    intro: '上一题的条件计数是对全表统计；如果想对<b>每个学生分别</b>统计，就要用 GROUP BY student_id。GROUP BY 把表按某列分组，每组独立做聚合。',
+    imper: '请查询<b>每个学生</b>的选课门数和<b>平均分</b>（返回学号、选课门数、平均分，平均分保留 2 位小数）。',
+    starter: 'SELECT student_id, COUNT(*) FROM sc;',
+    answer: 'SELECT student_id, COUNT(*) AS cnt, ROUND(AVG(score), 2) AS avg_score FROM sc GROUP BY student_id;',
+    strictOrder: false,
+    hint: 'GROUP BY student_id 让每个学生成为一组，组内独立算 COUNT 和 AVG。',
+    hints: [
+      'SELECT 里除了聚合函数外的列，必须出现在 GROUP BY 里。',
+      'ROUND(AVG(score), 2) 把平均分四舍五入到 2 位小数。',
+      '完整写法：<code>GROUP BY student_id</code>，SELECT 里加 <code>COUNT(*) AS cnt</code> 和 <code>ROUND(AVG(score), 2) AS avg_score</code>。',
+    ],
+  },
+  {
+    id: 'P39', group: 'agg', title: '双字段分组', difficulty: 'medium',
+    intro: 'GROUP BY 可以跟多个列，表示按<b>这些列的组合</b>分组。比如按"系 + 性别"分组，就能得到每个系每个性别的统计。',
+    imper: '请统计<b>每个系、每种性别</b>的学生人数（返回系、性别、人数，按系、性别排序）。',
+    starter: 'SELECT department, COUNT(*) FROM student GROUP BY department;',
+    answer: "SELECT department, gender, COUNT(*) AS cnt FROM student GROUP BY department, gender ORDER BY department, gender;",
+    strictOrder: true,
+    hint: '在 GROUP BY 里再加一列 gender，SELECT 也要把 gender 加出来。',
+    hints: [
+      'GROUP BY A, B 表示按 (A, B) 的每种组合独立分组。',
+      'SELECT 里 department, gender 都要出现，再加聚合 COUNT(*)。',
+      '完整写法：<code>GROUP BY department, gender ORDER BY department, gender</code>。',
+    ],
+  },
+  {
+    id: 'P40', group: 'agg', title: '每门课及格率', difficulty: 'hard',
+    intro: '及格率 = 及格人数 ÷ 总人数。"及格人数"用条件计数 <code>COUNT(CASE WHEN score &gt;= 60 THEN 1 END)</code>，"总人数"用 <code>COUNT(*)</code>。两者相除时，要<b>先转成浮点数</b>，否则整数除法会把结果截成 0。',
+    imper: '请查询<b>每门课</b>的选课人数、及格人数和及格率（按课程号排序，及格率保留 2 位小数）。',
+    starter: 'SELECT course_id, COUNT(*) AS cnt FROM sc GROUP BY course_id;',
+    answer: 'SELECT course_id, COUNT(*) AS cnt, COUNT(CASE WHEN score >= 60 THEN 1 END) AS pass_cnt, ROUND(1.0 * COUNT(CASE WHEN score >= 60 THEN 1 END) / COUNT(*), 2) AS pass_rate FROM sc GROUP BY course_id ORDER BY course_id;',
+    strictOrder: true,
+    hint: '及格率 = <code>ROUND(1.0 * 条件COUNT / COUNT(*), 2)</code>。关键：<code>1.0 *</code> 把整数除法转成浮点除法。',
+    hints: [
+      'SQLite 里 5 / 10 = 0（整数除法），1.0 * 5 / 10 = 0.5（浮点除法）。',
+      '及格人数：COUNT(CASE WHEN score &gt;= 60 THEN 1 END)。',
+      '完整分子分母：<code>1.0 * COUNT(CASE WHEN score &gt;= 60 THEN 1 END) / COUNT(*)</code>，外层套 ROUND(..., 2)。',
+    ],
+  },
+  {
+    id: 'P41', group: 'agg', title: '分数段分布', difficulty: 'hard',
+    intro: '分组统计不仅可以按真实列分组，还可以按 CASE WHEN 表达式分组——这就是"<b>动态分组</b>"。把分数段塞进 CASE 里变成组标识，每组人数一 COUNT 就是分布。',
+    imper: '请统计选课表里<b>每个分数段的人数</b>：[0,60) 不及格、[60,70) 及格、[70,80) 中、[80,90) 良、[90,100] 优。显示 grade 和 cnt，按优→良→中→及格→不及格的顺序排。',
+    starter: 'SELECT score, COUNT(*) FROM sc GROUP BY score;',
+    answer: `SELECT
+  CASE
+    WHEN score >= 90 THEN '优'
+    WHEN score >= 80 THEN '良'
+    WHEN score >= 70 THEN '中'
+    WHEN score >= 60 THEN '及格'
+    ELSE '不及格'
+  END AS grade,
+  COUNT(*) AS cnt
+FROM sc
+WHERE score IS NOT NULL
+GROUP BY grade
+ORDER BY
+  CASE grade
+    WHEN '优' THEN 1
+    WHEN '良' THEN 2
+    WHEN '中' THEN 3
+    WHEN '及格' THEN 4
+    ELSE 5
+  END;`,
+    strictOrder: true,
+    hint: 'SELECT 里用 CASE 把 score 映射成等级名 grade，再 GROUP BY grade。ORDER BY 再套一层 CASE 自定义排序顺序。',
+    hints: [
+      '先 WHERE score IS NOT NULL 把 NULL 成绩排除掉。',
+      'GROUP BY 可以用 SELECT 里的别名 grade。',
+      'ORDER BY CASE 自定义排序：<code>CASE grade WHEN \'优\' THEN 1 WHEN \'良\' THEN 2 ... END</code>。',
+    ],
+  },
+
+  // ===== JOIN 续 +4 (P42-P45) =====
+  {
+    id: 'P42', group: 'join', title: 'LEFT JOIN 含 0 的计数', difficulty: 'medium',
+    intro: '用 LEFT JOIN 把"主体表"和"关联表"连起来，再用 COUNT(关联表的列)。因为<b>关联列 NULL 时 COUNT 会跳过</b>，所以没人关联的主体记录会得到 0。',
+    imper: '请查询<b>每个学生的选课门数</b>，包括<b>没选过课的学生</b>（显示 0）。返回姓名、选课门数，按选课门数降序、学号升序排。',
+    starter: 'SELECT s.name, COUNT(*) AS cnt FROM student s JOIN sc ON s.student_id = sc.student_id GROUP BY s.student_id;',
+    answer: 'SELECT s.name, COUNT(sc.student_id) AS cnt FROM student s LEFT JOIN sc ON s.student_id = sc.student_id GROUP BY s.student_id, s.name ORDER BY cnt DESC, s.student_id;',
+    strictOrder: true,
+    hint: '关键两点：① 用 LEFT JOIN 让没选课的学生也出现；② COUNT(sc.student_id) 而不是 COUNT(*)——后者会把 NULL 行也计成 1。',
+    hints: [
+      'COUNT(*) 永远每行都算 1，LEFT JOIN 后没选课的学生会被误算成 1。',
+      '要 COUNT 关联表的某一列（如 sc.student_id），NULL 会被跳过，没选课的学生就是 0。',
+      '完整写法：<code>LEFT JOIN sc ... GROUP BY s.student_id ORDER BY cnt DESC, s.student_id</code>。',
+    ],
+  },
+  {
+    id: 'P43', group: 'join', title: '三表 JOIN 分组', difficulty: 'medium',
+    intro: 'JOIN 可以串多个：先从 A JOIN B，再 JOIN C，就能把三张表的信息都拉齐。典型场景：学生 - 选课 - 课程，一次查询拿到"某人选了某课、得了某分"。',
+    imper: '请查询<b>每个系的平均成绩</b>（按系聚合选课表里的分数）。返回系、平均分（保留 2 位），按均分降序排。',
+    starter: 'SELECT s.department, sc.score FROM student s JOIN sc ON s.student_id = sc.student_id;',
+    answer: 'SELECT s.department, ROUND(AVG(sc.score), 2) AS avg_score FROM student s JOIN sc ON s.student_id = sc.student_id GROUP BY s.department ORDER BY avg_score DESC;',
+    strictOrder: true,
+    hint: '三表 JOIN 里只用到 student + sc，department 来自 student，score 来自 sc，GROUP BY 按 department。',
+    hints: [
+      'department 来自 student 表，score 来自 sc 表，JOIN 后就可以一起用了。',
+      'GROUP BY s.department 让每个系成为一组，AVG(sc.score) 算组内均分。',
+      '完整写法：<code>GROUP BY s.department ORDER BY ROUND(AVG(sc.score), 2) DESC</code>。',
+    ],
+  },
+  {
+    id: 'P44', group: 'join', title: 'LEFT JOIN 找不及格', difficulty: 'hard',
+    intro: 'LEFT JOIN + 聚合可以解决"某些学生没有任何关联记录"类问题。反过来 JOIN + WHERE 可以找"某科不及格的学生"，要先用 JOIN 把选课记录和学生信息拉齐，再 WHERE 过滤不及格。',
+    imper: '请查出<b>选了"信号与系统"课但不及格（&lt;60）</b>的学生（返回姓名、系、分数，按分数升序）。',
+    starter: 'SELECT s.name, sc.score FROM student s JOIN sc ON s.student_id = sc.student_id WHERE sc.course_id = \'C010\';',
+    answer: "SELECT s.name, s.department, sc.score FROM student s JOIN sc ON s.student_id = sc.student_id JOIN course c ON sc.course_id = c.course_id WHERE c.course_name = '信号与系统' AND sc.score < 60 ORDER BY sc.score;",
+    strictOrder: true,
+    hint: '三表 JOIN 用 course 表拿到课程名过滤（而不是硬编码 course_id），再加 sc.score &lt; 60 限制不及格。',
+    hints: [
+      '用 course 表 JOIN 后，WHERE 条件写 <code>c.course_name = \'信号与系统\'</code>，不用硬记 C010。',
+      '不及格条件 <code>sc.score &lt; 60</code>，注意 NULL 不会命中，符合预期。',
+      '完整 WHERE：<code>c.course_name = \'信号与系统\' AND sc.score &lt; 60</code>。',
+    ],
+  },
+  {
+    id: 'P45', group: 'join', title: '自连接：找同系同学', difficulty: 'hard',
+    intro: '<b>自连接</b>：把一张表当两张用，给它起两个不同的别名（a、b），再 JOIN。典型场景：找"同系的同学对"、"比自己成绩高的同课同学"。',
+    imper: '请查出<b>和刘洋（20240105）同系</b>的其他学生（返回姓名、系）。不要包含刘洋自己。',
+    starter: 'SELECT name FROM student WHERE department = \'计算机科学\';',
+    answer: "SELECT b.name, b.department FROM student a JOIN student b ON a.department = b.department WHERE a.student_id = '20240105' AND b.student_id <> '20240105';",
+    strictOrder: false,
+    hint: '把 student 表起两个别名 a 和 b，用 <code>a.department = b.department</code> 把同系人配对起来，WHERE 固定 a 是刘洋、排除 b 是刘洋自己。',
+    hints: [
+      'FROM student a JOIN student b 是把同一张表"分身"成 a、b 两份。',
+      'JOIN 条件写 <code>a.department = b.department</code>，让 a 的每个同学匹配同系的所有 b。',
+      'WHERE 两段：<code>a.student_id = \'20240105\'</code> 锁定刘洋、<code>b.student_id &lt;&gt; \'20240105\'</code> 排除自己。',
+    ],
+  },
+
+  // ===== SUB 续 +5 (P46-P50) =====
+  {
+    id: 'P46', group: 'sub', title: 'EXISTS 存在判断', difficulty: 'medium',
+    intro: '<code>EXISTS (子查询)</code> 只要子查询返回至少一行就为 TRUE，否则为 FALSE。它不关心返回什么值、返回多少行，只关心"有没有"。比 IN 更高效，因为找到第一行就停。',
+    imper: '请用 EXISTS 查出<b>有学生选的课</b>（返回课程号、课程名）。',
+    starter: 'SELECT * FROM course;',
+    answer: "SELECT course_id, course_name FROM course c WHERE EXISTS (SELECT 1 FROM sc WHERE sc.course_id = c.course_id);",
+    strictOrder: false,
+    hint: '外层 WHERE 加 <code>EXISTS (SELECT 1 FROM sc WHERE sc.course_id = c.course_id)</code>，子查询引用外层的 c.course_id 叫<b>相关子查询</b>。',
+    hints: [
+      'EXISTS 的子查询通常用 <code>SELECT 1</code> 而不是 <code>SELECT *</code>，因为只关心有没有行。',
+      '子查询里 <code>sc.course_id = c.course_id</code> 引用了外层的 c，这叫"相关"。',
+      '完整写法：<code>WHERE EXISTS (SELECT 1 FROM sc WHERE sc.course_id = c.course_id)</code>。',
+    ],
+  },
+  {
+    id: 'P47', group: 'sub', title: 'NOT EXISTS 找无人问津', difficulty: 'medium',
+    intro: '<code>NOT EXISTS</code> 就是"找不到任何匹配"。常用于"找出没有 X 的 Y"，比如"没选课的学生""没人选的课程"。',
+    imper: '请用 NOT EXISTS 查出<b>没有任何学生选的课程</b>（返回课程号、课程名）。',
+    starter: 'SELECT * FROM course WHERE course_id NOT IN (SELECT course_id FROM sc);',
+    answer: "SELECT course_id, course_name FROM course c WHERE NOT EXISTS (SELECT 1 FROM sc WHERE sc.course_id = c.course_id);",
+    strictOrder: false,
+    hint: '把 <code>NOT IN</code> 换成 <code>NOT EXISTS</code>，子查询里加 <code>sc.course_id = c.course_id</code> 关联。',
+    hints: [
+      'NOT IN 子查询不能含 NULL，否则结果可能出错；NOT EXISTS 更稳健。',
+      '子查询里用 <code>sc.course_id = c.course_id</code> 关联外层。',
+      '完整写法：<code>WHERE NOT EXISTS (SELECT 1 FROM sc WHERE sc.course_id = c.course_id)</code>。',
+    ],
+  },
+  {
+    id: 'P48', group: 'sub', title: 'FROM 子查询（派生表）', difficulty: 'medium',
+    intro: '子查询不仅可以放在 WHERE 里，也可以放在 <code>FROM</code> 后面当一张"临时表"用，这叫<b>派生表</b>（derived table）。派生表必须起别名。',
+    imper: '先用子查询算出<b>每门课的平均分</b>（course_id + avg_score），再用这个结果查平均分 &gt; 80 的课程名。返回课程号、课程名、均分（保留 2 位）。',
+    starter: 'SELECT course_id, AVG(score) FROM sc GROUP BY course_id;',
+    answer: "SELECT c.course_id, c.course_name, t.avg_score FROM course c JOIN (SELECT course_id, ROUND(AVG(score), 2) AS avg_score FROM sc GROUP BY course_id) t ON c.course_id = t.course_id WHERE t.avg_score > 80;",
+    strictOrder: false,
+    hint: 'FROM 子查询：<code>(SELECT course_id, ROUND(AVG(score), 2) AS avg_score FROM sc GROUP BY course_id) t</code>，外层 JOIN course 拿到课程名。',
+    hints: [
+      'FROM 后的子查询必须用括号包起来，还要起别名（如 t）。',
+      '外层 JOIN 时像普通表一样 <code>t.course_id</code> 引用。',
+      '完整写法：<code>FROM course c JOIN (...) t ON ... WHERE t.avg_score &gt; 80</code>。',
+    ],
+  },
+  {
+    id: 'P49', group: 'sub', title: 'ANY / ALL 用法', difficulty: 'hard',
+    intro: '<code>&gt; ALL (子查询)</code> 表示"大于子查询结果里的<b>每一个</b>"，等价于大于最大值。<code>&gt; ANY</code> 表示"至少大于其中一个"，等价于大于最小值。sql.js 不支持 ALL/ANY 关键字，可以用 <code>&gt; (SELECT MAX(...) ...)</code> 等价替代。',
+    imper: '请查出<b>分数高于所有数学系学生最高分</b>的选课记录（返回学号、课程号、分数）。用子查询 + MAX 实现。',
+    starter: 'SELECT * FROM sc WHERE score > 90;',
+    answer: 'SELECT student_id, course_id, score FROM sc WHERE score > (SELECT MAX(score) FROM sc JOIN student ON sc.student_id = student.student_id WHERE student.department = \'数学\');',
+    strictOrder: false,
+    hint: '"高于数学系最高分" = <code>score &gt; (SELECT MAX(score) FROM sc JOIN student ... WHERE department = \'数学\')</code>。',
+    hints: [
+      '先写子查询算数学系最高分：<code>SELECT MAX(score) FROM sc JOIN student ... WHERE department = \'数学\'</code>。',
+      '外层 <code>WHERE score &gt; (子查询)</code>，括号包起来。',
+      '注意 SQL 标准里的 <code>&gt; ALL (子查询)</code> 等价于 <code>&gt; (SELECT MAX(...) ...)</code>。',
+    ],
+  },
+  {
+    id: 'P50', group: 'sub', title: '每系数据库课最高分', difficulty: 'hard',
+    intro: '这是前面几个技巧的综合：JOIN 拉齐学生与选课 + GROUP BY 按系分组 + 聚合求 MAX。如果想显示系名（而非系号），就要 JOIN student 拿 department 列。',
+    imper: '请查出<b>每个系在"数据库原理及应用"课上的最高分</b>（返回系、最高分）。只统计选过这门课的系，按最高分降序排。',
+    starter: 'SELECT department, MAX(score) FROM student JOIN sc ON student.student_id = sc.student_id GROUP BY department;',
+    answer: "SELECT s.department, MAX(sc.score) AS max_score FROM student s JOIN sc ON s.student_id = sc.student_id WHERE sc.course_id = 'C001' GROUP BY s.department ORDER BY max_score DESC;",
+    strictOrder: true,
+    hint: '在 JOIN 后加 <code>WHERE sc.course_id = \'C001\'</code> 锁定数据库课，再 GROUP BY department 聚合 MAX(score)。',
+    hints: [
+      'JOIN 后 WHERE 先过滤课程，再 GROUP BY 才不会把别的课的分数混进来。',
+      '数学系没人选 C001，会自动不出现在结果里（INNER JOIN 的特性）。',
+      '完整写法：<code>WHERE sc.course_id = \'C001\' GROUP BY s.department ORDER BY max_score DESC</code>。',
+    ],
   },
 ];
 
