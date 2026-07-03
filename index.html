@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SQL 练习场 · v0.3</title>
+<title>SQL 练习场 · v0.4 preview</title>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -436,7 +436,7 @@
 </head>
 <body>
 <header>
-  <h1>❄️ SQL 练习场 <span style="opacity:0.7;font-size:12px;font-weight:400;">v0.3 · 上海电力大学·数据库原理及应用</span></h1>
+  <h1>❄️ SQL 练习场 <span style="opacity:0.7;font-size:12px;font-weight:400;">v0.4 preview · 上海电力大学·数据库原理及应用</span></h1>
   <div class="status">状态：<span id="status-badge" class="loading">正在加载 SQLite 引擎…</span></div>
 </header>
 
@@ -681,6 +681,10 @@ const LESSONS = [
     answer: 'SELECT student_id, course_id FROM sc WHERE score IS NULL;',
     strictOrder: false,
     hint: '把 <code>= NULL</code> 改成 <code>IS NULL</code>。运行原示例看看会发生什么，就明白为什么必须改。',
+    hints: [
+      '想一想：SQL 里判断"空"能不能用 <code>=</code>？先运行下示例——大概率一条都查不到，为什么会这样？',
+      '把 <code>WHERE score = NULL</code> 改成 <code>WHERE score IS NULL</code>。原因：NULL 参与 <code>=</code> 比较，结果永远是 NULL（三值逻辑，既不是 true 也不是 false），所以必须用专用的 <code>IS NULL</code> / <code>IS NOT NULL</code>。',
+    ],
     note: '教材重点：三值逻辑（true/false/NULL），NULL 参与任何比较运算都得 NULL',
   },
 
@@ -702,6 +706,10 @@ const LESSONS = [
     answer: 'SELECT name, department, birth_year FROM student ORDER BY department ASC, birth_year DESC;',
     strictOrder: true,
     hint: '在 <code>ORDER BY department</code> 后加逗号，再加 <code>birth_year DESC</code>。',
+    hints: [
+      '<code>ORDER BY</code> 后面可以跟多个字段，用逗号分隔。当前示例只按 department 排——想想同系内学生的顺序现在是不是随机的？',
+      '在 <code>ORDER BY department</code> 后加 <code>, birth_year DESC</code>——先按系名升序，同系内再按出生年降序。',
+    ],
   },
 
   // ===== 聚合与分组 =====
@@ -731,6 +739,10 @@ const LESSONS = [
     answer: 'SELECT department, COUNT(*) AS cnt FROM student GROUP BY department ORDER BY cnt DESC;',
     strictOrder: true,
     hint: '在结尾加 <code>ORDER BY cnt DESC</code>。',
+    hints: [
+      '分组结果已经出来了，只是<b>顺序</b>不对。想想 ORDER BY 应该按哪个字段？升序还是降序？',
+      '末尾追加 <code>ORDER BY cnt DESC</code>——注意 ORDER BY 可以直接引用 SELECT 里定义的别名 <code>cnt</code>。',
+    ],
   },
   {
     id: 'P16', group: 'agg', title: '各课程平均分', difficulty: 'medium',
@@ -740,6 +752,10 @@ const LESSONS = [
     answer: 'SELECT course_id, ROUND(AVG(score),2) AS 平均分 FROM sc GROUP BY course_id;',
     strictOrder: false,
     hint: '给 AVG(score) 套一层 <code>ROUND(..., 2)</code>，再加 <code>AS 平均分</code>。',
+    hints: [
+      '题目有两个要求：(1) 平均分保留 2 位小数；(2) 列名改成中文"平均分"。想想 SQL 里"保留 N 位小数"用哪个函数？',
+      '把 <code>AVG(score)</code> 换成 <code>ROUND(AVG(score), 2) AS 平均分</code>——<code>ROUND(值, 位数)</code> 是标准写法。',
+    ],
     note: 'C007 编译原理无人选，本题不会返回它。要让它出现，见 P22 LEFT JOIN。',
   },
   {
@@ -750,6 +766,10 @@ const LESSONS = [
     answer: 'SELECT course_id, COUNT(*) AS cnt FROM sc GROUP BY course_id HAVING COUNT(*) >= 5;',
     strictOrder: false,
     hint: '在 <code>GROUP BY course_id</code> 后加 <code>HAVING COUNT(*) &gt;= 5</code>。',
+    hints: [
+      '分组已经做好，现在需要"分组之后"再过滤。聚合函数（如 <code>COUNT</code>）能出现在 <code>WHERE</code> 里吗？如果不能，那应该用哪个关键字？',
+      '在 <code>GROUP BY course_id</code> 后追加 <code>HAVING COUNT(*) &gt;= 5</code>。执行顺序：先 GROUP → 再 HAVING 过滤分组结果。',
+    ],
     note: '教材重点：WHERE vs HAVING 的执行时机差异',
   },
   {
@@ -760,6 +780,10 @@ const LESSONS = [
     answer: 'SELECT course_id, ROUND(AVG(score),2) AS avg_s FROM sc GROUP BY course_id HAVING AVG(score) >= 85;',
     strictOrder: false,
     hint: '给 AVG(score) 套 ROUND，末尾加 <code>HAVING AVG(score) &gt;= 85</code>。',
+    hints: [
+      '和 P17 是一个套路——先分组算均分，再"分组后"过滤均分 ≥ 85 的组。SELECT 里要保留 2 位小数，过滤条件放哪个关键字后面？',
+      '把 <code>AVG(score)</code> 套一层 <code>ROUND(..., 2)</code>；末尾追加 <code>HAVING AVG(score) &gt;= 85</code>。<b>提醒</b>：HAVING 里既可以用聚合函数原式，也可以用 SELECT 里定义的别名。',
+    ],
   },
 
   // ===== JOIN 多表连接 =====
@@ -771,6 +795,10 @@ const LESSONS = [
     answer: 'SELECT s.name, c.course_name, sc.score FROM student s JOIN sc ON s.student_id=sc.student_id JOIN course c ON sc.course_id=c.course_id;',
     strictOrder: false,
     hint: '在示例基础上再 JOIN 一次 course 表，用 <code>JOIN course c ON sc.course_id = c.course_id</code>，SELECT 里加上 <code>c.course_name</code>。',
+    hints: [
+      '先想清楚要显示三张表的信息：<b>student</b>（姓名）、<b>sc</b>（分数）、<b>course</b>（课程名）。目前示例只连了两张表，还缺一张。想想应该用什么条件把 <b>course</b> 加进来？',
+      '在原来的 <code>JOIN sc ON ...</code> 后面再追加一次 <code>JOIN course c ON sc.course_id = c.course_id</code>；然后在 <code>SELECT</code> 后面把 <code>c.course_name</code> 也加上（用逗号隔开）。',
+    ],
   },
   {
     id: 'P20', group: 'join', title: '数据库高分学生', difficulty: 'medium',
@@ -783,6 +811,10 @@ const LESSONS = [
     answer: "SELECT s.name, sc.score FROM student s JOIN sc ON s.student_id=sc.student_id JOIN course c ON sc.course_id=c.course_id WHERE c.course_name='数据库原理及应用' AND sc.score>=85 ORDER BY sc.score DESC;",
     strictOrder: true,
     hint: '改课程名为"数据库原理及应用"，加 <code>AND sc.score &gt;= 85</code>，末尾加 <code>ORDER BY sc.score DESC</code>。',
+    hints: [
+      '要动三处：(1) 换课程名；(2) 加一个分数过滤条件；(3) 结尾加降序排序。想想 WHERE 里加条件用什么关键字连接？',
+      '把 <code>\'高等数学\'</code> 改成 <code>\'数据库原理及应用\'</code>；WHERE 后面用 <code>AND</code> 追加 <code>sc.score &gt;= 85</code>；末尾追加 <code>ORDER BY sc.score DESC</code>。',
+    ],
   },
   {
     id: 'P21', group: 'join', title: 'LEFT JOIN 找没选课的学生', difficulty: 'hard',
@@ -795,6 +827,11 @@ const LESSONS = [
     answer: 'SELECT s.student_id, s.name FROM student s LEFT JOIN sc ON s.student_id=sc.student_id WHERE sc.student_id IS NULL ORDER BY s.student_id;',
     strictOrder: true,
     hint: '把 <code>IS NOT NULL</code> 改成 <code>IS NULL</code>。想想为什么？因为 LEFT JOIN 会给"没匹配上"的学生生成 sc 列全为 NULL 的行——这正是我们要找的。',
+    hints: [
+      'LEFT JOIN 会保留左表 <b>student</b> 的所有行，右表 <b>sc</b> 匹配不上的位置全填 NULL。想想"从没选过任何课"的学生，他在 LEFT JOIN 结果里的 sc 列长什么样？',
+      '那些没选课的学生，其对应的所有 <code>sc.xxx</code> 列都是 NULL。你要<b>筛出</b>他们——现在 WHERE 用的 <code>IS NOT NULL</code> 恰好把他们<b>排除</b>了，方向是不是搞反了？',
+      '把 <code>WHERE sc.student_id IS NOT NULL</code> 改成 <code>IS NULL</code>——这是 <b>LEFT JOIN + IS NULL</b> 的经典套路，专门用来找"左表有但右表没有"的行。',
+    ],
     note: '经典 LEFT JOIN + IS NULL 模式，教材必考',
   },
   {
@@ -807,6 +844,11 @@ const LESSONS = [
     answer: 'SELECT c.course_id, c.course_name FROM course c LEFT JOIN sc ON c.course_id=sc.course_id WHERE sc.course_id IS NULL;',
     strictOrder: false,
     hint: '把 <code>IS NOT NULL</code> 改成 <code>IS NULL</code>。',
+    hints: [
+      '这题跟 P21 是<b>完全对称</b>的：P21 找"没选课的学生"（主表 student，右表 sc），本题要找"没被任何学生选过的课"。主表应该是哪张？',
+      '示例已经把 <b>course</b> 当主表，用 <code>LEFT JOIN sc</code> 拉出所有课程。真正的<b>陷阱在 WHERE</b>——现在 <code>IS NOT NULL</code> 筛出的是"有选课记录的课程"，正好和你要的相反。',
+      '把 <code>WHERE sc.course_id IS NOT NULL</code> 改成 <code>WHERE sc.course_id IS NULL</code>。<b>为什么用 IS NULL</b>？LEFT JOIN 会给"course 里有但 sc 里没有"的行填一整行 NULL——这正是"没被选的课"。',
+    ],
   },
 
   // ===== 子查询 =====
@@ -822,6 +864,10 @@ const LESSONS = [
     answer: "SELECT student_id, name FROM student WHERE student_id IN (SELECT student_id FROM sc WHERE course_id='C001') ORDER BY student_id;",
     strictOrder: true,
     hint: '把子查询里的 <code>\'C002\'</code> 改成 <code>\'C001\'</code>。',
+    hints: [
+      '目前子查询里查的是 C002 的选课学生——但题目要的是哪门课？先看清楚课程编号再动手。',
+      '把子查询里的 <code>course_id = \'C002\'</code> 改成 <code>course_id = \'C001\'</code>。整体思路：先从 sc 表挑出选过 C001 的学号集合，再用 <code>IN</code> 从 student 表过滤。',
+    ],
   },
   {
     id: 'P24', group: 'sub', title: 'NOT IN 反向子查询', difficulty: 'medium',
@@ -835,6 +881,10 @@ const LESSONS = [
     answer: "SELECT student_id, name FROM student WHERE student_id NOT IN (SELECT student_id FROM sc WHERE course_id='C001') ORDER BY student_id;",
     strictOrder: true,
     hint: '把 <code>IN</code> 改成 <code>NOT IN</code>。',
+    hints: [
+      '目前 WHERE 用的是 <code>IN</code>（选过 C001 的学生）。题目要的是"没选过"——想想应该改哪个关键字？',
+      '把 <code>WHERE student_id IN (...)</code> 改成 <code>WHERE student_id NOT IN (...)</code>。<b>教材陷阱</b>：如果子查询结果里可能出现 NULL，NOT IN 会返回空集，此时要改用 <code>NOT EXISTS</code>；本题子查询不含 NULL，放心用。',
+    ],
     note: '教材重点：NOT IN 遇 NULL 的坑（稳妥写法用 NOT EXISTS）',
   },
   {
@@ -849,6 +899,11 @@ const LESSONS = [
     answer: "SELECT s.name, sc.score FROM student s JOIN sc ON s.student_id=sc.student_id WHERE sc.course_id='C001' AND sc.score > (SELECT AVG(score) FROM sc WHERE course_id='C001') ORDER BY sc.score DESC;",
     strictOrder: true,
     hint: '把 <code>&gt; 80</code> 改成 <code>&gt; (SELECT AVG(score) FROM sc WHERE course_id=\'C001\')</code>。',
+    hints: [
+      '题目要"高于该课平均分"——平均分是多少你不用手算，能不能让 SQL 自己算？想一想<b>子查询</b>能不能返回一个<b>单值</b>？',
+      '目前示例用固定值 80 做过滤——你需要把 80 替换成一个能"动态算 C001 均分"的子查询。子查询长这样：<code>(SELECT AVG(score) FROM sc WHERE course_id=\'C001\')</code>，它返回一个数值。',
+      '把 <code>AND sc.score &gt; 80</code> 里的 <code>80</code> 换成 <code>(SELECT AVG(score) FROM sc WHERE course_id=\'C001\')</code>。这就是<b>标量子查询</b>——子查询作为单值，直接放在比较运算符右边。',
+    ],
     note: '相关子查询是教材 ch08 顶点难度，务必掌握',
   },
 ];
@@ -1030,13 +1085,30 @@ function renderQu(L) {
         </div>
         <div class="result-body" id="result-body-${L.id}"></div>
       </div>
-      <details class="hint-block">
-        <summary>💡 提示</summary>
-        <div>${L.hint || '独立思考一下~'}</div>
-      </details>
+      ${(() => {
+        const hintsArr = L.hints || (L.hint ? [L.hint] : ['独立思考一下~']);
+        const total = hintsArr.length;
+        if (total <= 1) {
+          return `<details class="hint-block"><summary>💡 提示</summary><div>${hintsArr[0]}</div></details>`;
+        }
+        const items = hintsArr.map((h, i) => `<div class="hint-item" id="hint-item-${L.id}-${i}"${i > 0 ? ' style="display:none;margin-top:10px;padding-top:10px;border-top:1px dashed #ffdfb5"' : ''}><b>提示 ${i + 1}：</b>${h}</div>`).join('');
+        return `<details class="hint-block">
+        <summary>💡 分级提示 · <span id="hint-shown-${L.id}">1</span>/${total}</summary>
+        <div>
+          ${items}
+          <button id="hint-more-${L.id}" onclick="showNextHint('${L.id}', ${total})" style="margin-top:10px; font-size:12px; padding:4px 10px; background:#fff; border:1px solid #ffdfb5; color:#953800; border-radius:4px; cursor:pointer;">👇 继续查看下一条提示</button>
+        </div>
+      </details>`;
+      })()}
       <details class="ans-block">
         <summary>👀 参考答案</summary>
-        <pre>${escapeHtml(L.answer)}</pre>
+        <div>
+          <div id="ans-warn-${L.id}" style="padding:4px 0;">
+            <div style="color:#57606a; font-size:12px; margin-bottom:6px;">⚠️ 看答案后就不算你独立完成了哦～建议先按提示多试几次</div>
+            <button onclick="revealAnswer('${L.id}')" style="font-size:12px; padding:4px 12px; background:#0969da; color:white; border:none; border-radius:4px; cursor:pointer;">我已知晓，展示答案</button>
+          </div>
+          <pre id="ans-code-${L.id}" style="display:none">${escapeHtml(L.answer)}</pre>
+        </div>
       </details>
     </div>
   `;
@@ -1232,6 +1304,29 @@ function resetProgress() {
 }
 
 // ============ 工具 ============
+function showNextHint(qid, total) {
+  const shownEl = document.getElementById('hint-shown-' + qid);
+  if (!shownEl) return;
+  let shown = parseInt(shownEl.textContent);
+  if (shown < total) {
+    const nextItem = document.getElementById(`hint-item-${qid}-${shown}`);
+    if (nextItem) nextItem.style.display = '';
+    shown++;
+    shownEl.textContent = shown;
+    if (shown >= total) {
+      const btn = document.getElementById('hint-more-' + qid);
+      if (btn) btn.style.display = 'none';
+    }
+  }
+}
+
+function revealAnswer(qid) {
+  const warn = document.getElementById('ans-warn-' + qid);
+  const code = document.getElementById('ans-code-' + qid);
+  if (warn) warn.style.display = 'none';
+  if (code) code.style.display = '';
+}
+
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 }
